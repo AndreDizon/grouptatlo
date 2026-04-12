@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - UA Parking System</title>
+    <style>
+        /* Reusing the same core styles as login */
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-image: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url('University-of-the-Assumption.jpeg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); width: 100%; max-width: 350px; text-align: center; }
+        .logo { width: 90px; margin-bottom: 15px; filter: drop-shadow(-8px 4px 6px rgba(0, 0, 0, 0.3)); }
+        h2 { color: #003882; margin: 0 0 5px 0; font-size: 1.4rem; }
+        p { color: #666; margin-bottom: 25px; font-size: 0.9rem; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: #333; margin-bottom: 5px; font-weight: 600; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        .form-control:focus { outline: none; border-color: #003882; box-shadow: 0 0 5px rgba(0, 56, 130, 0.3); }
+        .btn { width: 100%; padding: 12px; background-color: #003882; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; }
+        .btn:hover { background-color: #00265e; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .link-text { display: block; margin-top: 20px; font-size: 0.85rem; color: #555; text-decoration: none; }
+        .link-text span { color: #003882; font-weight: bold; }
+        .link-text:hover span { text-decoration: underline; }
+        .error-message { color: #CE2029; font-size: 0.85rem; margin-top: 10px; display: none; text-align: left; background-color: #ffebee; padding: 10px; border-radius: 4px; }
+        .error-message.show { display: block; }
+        .success-message { color: #4CAF50; font-size: 0.85rem; margin-top: 10px; display: none; text-align: left; background-color: #f1f8f4; padding: 10px; border-radius: 4px; }
+        .success-message.show { display: block; }
+        .password-strength { margin-top: 8px; font-size: 0.75rem; }
+        .strength-bar { height: 4px; background-color: #ddd; border-radius: 2px; overflow: hidden; margin-top: 4px; }
+        .strength-indicator { height: 100%; width: 0%; transition: width 0.3s, background-color 0.3s; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
+        .btn.loading { pointer-events: none; opacity: 0.8; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h2>Register to continue.</h2>
+        <p>Create your driver account.</p>
+
+        <form id="registerForm">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" class="form-control" required placeholder="Choose a username" minlength="3">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" class="form-control" required placeholder="Create a password" minlength="6">
+                <div class="password-strength">
+                    <div class="strength-bar">
+                        <div class="strength-indicator" id="strengthIndicator"></div>
+                    </div>
+                    <span id="strengthText"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmPassword" class="form-control" required placeholder="Confirm your password" minlength="6">
+            </div>
+            <button type="submit" class="btn" id="registerBtn">Create Account</button>
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+        </form>
+
+        <a href="login.html" class="link-text">Already have an account? <span>Click here to login</span></a>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        const registerForm = document.getElementById('registerForm');
+        const registerBtn = document.getElementById('registerBtn');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const strengthIndicator = document.getElementById('strengthIndicator');
+        const strengthText = document.getElementById('strengthText');
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            successMessage.classList.remove('show');
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.add('show');
+            errorMessage.classList.remove('show');
+        }
+
+        function hideMessages() {
+            errorMessage.classList.remove('show');
+            successMessage.classList.remove('show');
+        }
+
+        function setLoading(isLoading) {
+            registerBtn.disabled = isLoading;
+            if (isLoading) {
+                registerBtn.classList.add('loading');
+                registerBtn.innerHTML = '<span class="spinner"></span>Creating Account...';
+            } else {
+                registerBtn.classList.remove('loading');
+                registerBtn.innerHTML = 'Create Account';
+            }
+        }
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            let feedback = '';
+
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 8) strength += 25;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[^a-zA-Z0-9]/.test(password)) strength += 10;
+
+            strength = Math.min(strength, 100);
+
+            if (strength < 30) {
+                feedback = 'Weak password';
+                strengthIndicator.style.width = '25%';
+                strengthIndicator.style.backgroundColor = '#CE2029';
+            } else if (strength < 60) {
+                feedback = 'Fair password';
+                strengthIndicator.style.width = '60%';
+                strengthIndicator.style.backgroundColor = '#FF9800';
+            } else if (strength < 85) {
+                feedback = 'Good password';
+                strengthIndicator.style.width = '85%';
+                strengthIndicator.style.backgroundColor = '#FFD700';
+            } else {
+                feedback = 'Strong password';
+                strengthIndicator.style.width = '100%';
+                strengthIndicator.style.backgroundColor = '#4CAF50';
+            }
+
+            strengthText.textContent = feedback;
+            return strength;
+        }
+
+        passwordInput.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+            hideMessages();
+        });
+
+        async function registerUser(username, password) {
+            try {
+                // Try backend registration first
+                const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (response.ok) {
+                    return { success: true, backend: true };
+                } else {
+                    const data = await response.json();
+                    const errorMsg = data.username?.[0] || data.password?.[0] || 'Registration failed';
+                    throw new Error(errorMsg);
+                }
+            } catch (error) {
+                console.log('Backend unavailable, using local storage...');
+                // Fallback to localStorage
+                const users = JSON.parse(localStorage.getItem('registeredUsers') || '{}');
+                
+                if (users[username]) {
+                    throw new Error('Username already taken');
+                }
+
+                users[username] = {
+                    password: password,
+                    created_at: new Date().toISOString()
+                };
+
+                localStorage.setItem('registeredUsers', JSON.stringify(users));
+                return { success: true, backend: false };
+            }
+        }
+
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideMessages();
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Validation
+            if (!username || !password || !confirmPassword) {
+                showError('Please fill in all fields.');
+                return;
+            }
+
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters long.');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match.');
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                await registerUser(username, password);
+                
+                // Store registration data temporarily
+                sessionStorage.setItem('newUser', JSON.stringify({
+                    username: username,
+                    role: 'driver', // Default role for new registration
+                    registered_at: new Date().toISOString()
+                }));
+
+                showSuccess('Account created successfully! Redirecting...');
+                
+                setTimeout(() => {
+                    window.location.href = 'setup-profile.html';
+                }, 1500);
+            } catch (error) {
+                showError(error.message || 'Registration failed. Please try again.');
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>

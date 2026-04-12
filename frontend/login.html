@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - UA Parking System</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url('University-of-the-Assumption.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+        .logo {
+            width: 90px;
+            margin-bottom: 15px;
+            filter: drop-shadow(-8px 4px 6px rgba(0, 0, 0, 0.3));
+        }
+        h2 { color: #003882; margin: 0 0 5px 0; font-size: 1.4rem; }
+        p { color: #666; margin-bottom: 25px; font-size: 0.9rem; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: #333; margin-bottom: 5px; font-weight: 600; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        .form-control:focus { outline: none; border-color: #003882; box-shadow: 0 0 5px rgba(0, 56, 130, 0.3); }
+        .btn { width: 100%; padding: 12px; background-color: #003882; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; }
+        .btn:hover { background-color: #00265e; }
+        .link-text { display: block; margin-top: 20px; font-size: 0.85rem; color: #555; text-decoration: none; }
+        .link-text span { color: #003882; font-weight: bold; }
+        .link-text:hover span { text-decoration: underline; }
+        .error-message { color: #CE2029; font-size: 0.85rem; margin-top: 10px; display: none; text-align: left; background-color: #ffebee; padding: 10px; border-radius: 4px; }
+        .error-message.show { display: block; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
+        .btn.loading { pointer-events: none; opacity: 0.8; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h2>Welcome to UA Parking System</h2>
+        <p>Log in to continue.</p>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" class="form-control" required placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" class="form-control" required placeholder="Enter your password">
+            </div>
+            <button type="submit" class="btn" id="loginBtn">Login</button>
+            <div class="error-message" id="errorMessage"></div>
+        </form>
+
+        <a href="register.html" class="link-text">Don't have an account? <span>Click here to register</span></a>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        const TEST_ACCOUNTS = {
+            'root': { password: 'root12345', role: 'admin', redirect: 'admin-home-page.html' },
+            'admin': { password: 'admin123', role: 'admin', redirect: 'admin-home-page.html' },
+            'driver1': { password: 'password123', role: 'driver', redirect: 'driver-home-page.html' },
+            'driver2': { password: 'password123', role: 'driver', redirect: 'driver-home-page.html' },
+            'guard1': { password: 'password123', role: 'guard', redirect: 'guard-home-page.html' },
+            'guard2': { password: 'password123', role: 'guard', redirect: 'guard-home-page.html' }
+        };
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        function setLoading(isLoading) {
+            loginBtn.disabled = isLoading;
+            if (isLoading) {
+                loginBtn.classList.add('loading');
+                loginBtn.innerHTML = '<span class="spinner"></span>Logging in...';
+            } else {
+                loginBtn.classList.remove('loading');
+                loginBtn.innerHTML = 'Login';
+            }
+        }
+
+        async function authenticateWithBackend(username, password) {
+            try {
+                // Try to authenticate with Django backend
+                const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Store token and user info
+                    localStorage.setItem('authToken', data.token || '');
+                    localStorage.setItem('userId', data.id);
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('userRole', data.role || 'driver');
+                    
+                    // Redirect based on role
+                    const role = data.role || 'driver';
+                    if (role === 'admin') {
+                        window.location.href = 'admin-home-page.html';
+                    } else if (role === 'guard') {
+                        window.location.href = 'guard-home-page.html';
+                    } else {
+                        window.location.href = 'driver-home-page.html';
+                    }
+                } else {
+                    // Fallback to test account for development
+                    authenticateWithTestAccount(username, password);
+                }
+            } catch (error) {
+                console.log('Backend unreachable, using test accounts...');
+                authenticateWithTestAccount(username, password);
+            }
+        }
+
+        function authenticateWithTestAccount(username, password) {
+            const account = TEST_ACCOUNTS[username.toLowerCase()];
+            
+            if (account && account.password === password) {
+                // Store credentials for testing
+                localStorage.setItem('username', username);
+                localStorage.setItem('userRole', account.role);
+                localStorage.setItem('isTestMode', 'true');
+                
+                // Redirect to appropriate dashboard
+                window.location.href = account.redirect;
+            } else {
+                showError('Invalid username or password. Please try again.');
+                setLoading(false);
+            }
+        }
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideError();
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                showError('Please enter both username and password.');
+                return;
+            }
+
+            setLoading(true);
+            
+            // Attempt authentication
+            await authenticateWithBackend(username, password);
+        });
+
+        // Clear error message when user starts typing
+        usernameInput.addEventListener('input', hideError);
+        passwordInput.addEventListener('input', hideError);
+    </script>
+</body>
+</html>

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Accounts - UA Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- GLOBAL & BODY STYLES --- */
+        body {
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+        }
+        body.night-mode { background-color: #0d1117; color: #e2e8f0; }
+
+        /* --- HEADER & NAVIGATION STYLES --- */
+        #middle-banner {
+            transition: background-image 0.5s ease-in-out;
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+        }
+        .bg-day-fallback { background-color: #87CEEB; }
+        .bg-night-fallback { background-color: #0f172a; }
+
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            display: block; margin-top: 5px; right: 0; background: #FFD700;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; left: 0; background: #FFD700; }
+        .nav-link:hover, .nav-link.active { color: #FFD700; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --- USER SPECIFIC COMPONENT STYLES --- */
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active { background-color: #002366 !important; color: white !important; border-color: #002366 !important; }
+
+        /* --- SCROLL REVEAL ANIMATIONS --- */
+        .reveal { opacity: 0; transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.up { transform: translateY(40px); }
+        .reveal.is-visible { opacity: 1; transform: none !important; }
+
+        /* --- NIGHT MODE OVERRIDES FOR USER CONTENT --- */
+        body.night-mode .bg-white { background-color: #1a2235 !important; border-color: #2a3752 !important; color: #e2e8f0; }
+        body.night-mode h1, body.night-mode h2, body.night-mode .text-\[\#002366\] { color: #e2e8f0 !important; }
+        body.night-mode .text-gray-700 { color: #cbd5e1 !important; }
+        body.night-mode .bg-gray-50 { background-color: #111827 !important; border-color: #2a3752 !important; }
+        body.night-mode .border-gray-200, body.night-mode .border-gray-300, body.night-mode .border-b { border-color: #2a3752 !important; }
+        body.night-mode .divide-y > :not([hidden]) ~ :not([hidden]) { border-color: #2a3752 !important; }
+        body.night-mode .hover\:bg-gray-50:hover { background-color: #1f2937 !important; }
+        body.night-mode input, body.night-mode select { background-color: #0d1117; color: white; border-color: #2a3752; }
+        body.night-mode .tab-btn:not(.active):not(#btn-create) { background-color: #1a2235; color: #cbd5e1; border-color: #2a3752; }
+
+        /* --- FOOTER STYLES --- */
+        .animated-footer {
+            position: relative; margin-top: auto; height: 180px; width: 100%;
+            background: linear-gradient(to bottom, #d4f0ff 0%, #e6f7ff 100%);
+            overflow: hidden; border-top: 2px solid #bce6ff;
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        .animated-footer.night-mode { background: linear-gradient(to bottom, #0a1020 0%, #17243b 100%); border-top: 2px solid #283752; }
+        
+        .celestial-body {
+            position: absolute; top: 15px; right: 10%; width: 50px; height: 50px;
+            background-color: rgba(255, 235, 59, 0.8); border-radius: 50%;
+            box-shadow: 0 0 30px 15px rgba(255, 235, 59, 0.4); z-index: 1; transition: all 0.5s ease;
+        }
+        .animated-footer.night-mode .celestial-body { width: 45px; height: 45px; background-color: #fcf9e3; box-shadow: 0 0 25px 10px rgba(252, 249, 227, 0.2); }
+        
+        .star { position: absolute; background-color: white; border-radius: 50%; z-index: 0; opacity: 0; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .star { opacity: var(--star-opacity); }
+        
+        .cloud, .cloud::before, .cloud::after { background: white; transition: background 0.5s ease; }
+        .cloud { position: absolute; border-radius: 50px; z-index: 2; opacity: 0.9; }
+        .cloud::before, .cloud::after { content: ''; position: absolute; border-radius: 50%; }
+        .cloud::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+        .cloud::after { width: 40px; height: 40px; top: -15px; right: 15px; }
+        .animated-footer.night-mode .cloud, .animated-footer.night-mode .cloud::before, .animated-footer.night-mode .cloud::after { background: rgba(255, 255, 255, 0.05); }
+        
+        .cityscape { position: absolute; bottom: 40px; width: 100%; height: 90px; display: flex; align-items: flex-end; z-index: 3; }
+        .building { background-color: rgba(160, 220, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.4); border-bottom: none; box-sizing: border-box; position: relative; overflow: hidden; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .building { background-color: rgba(15, 22, 35, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); border-bottom: none; }
+        .window { position: absolute; background-color: rgba(255, 255, 255, 0.85); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .window { background-color: rgba(255, 240, 150, 0.85); box-shadow: 0 0 3px rgba(255, 240, 150, 0.5); }
+        
+        .road { position: absolute; bottom: 0; width: 100%; height: 40px; background-color: #e0e0e0; border-top: 2px solid #ccc; z-index: 4; display: flex; align-items: center; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .road { background-color: #1e2430; border-top: 2px solid #11151c; }
+        .road-line { width: 100%; height: 2px; background-image: linear-gradient(90deg, #fff 50%, transparent 50%); background-size: 30px 2px; opacity: 0.5; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .road-line { opacity: 0.15; }
+        
+        .car { position: absolute; bottom: 12px; width: 45px; height: 16px; background-color: #ffffff; border-radius: 8px; z-index: 5; box-shadow: 2px 2px 4px rgba(0,0,0,0.15); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .car { background-color: #8c97a6; box-shadow: 15px 0 10px -3px rgba(255, 255, 200, 0.5); }
+        
+        .footer-content { position: absolute; bottom: 40px; width: 100%; padding: 0 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10; pointer-events: none; }
+        .footer-left { color: #00265e; transition: color 0.5s ease; }
+        .footer-left h3 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; text-transform: uppercase; transition: text-shadow 0.5s ease;}
+        .footer-left p { margin: 3px 0 12px 0; font-size: 0.85rem; color: #555; transition: color 0.5s ease;}
+        .animated-footer.night-mode .footer-left { color: #dbe4f0; }
+        .animated-footer.night-mode .footer-left h3 { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-left p { color: #8fa0b5; }
+        
+        .footer-right { margin-bottom: 12px; pointer-events: auto; }
+        .footer-right a { color: #00265e; text-decoration: none; margin-left: 20px; font-size: 0.85rem; font-weight: 600; transition: color 0.5s ease, text-shadow 0.5s ease; }
+        .footer-right a:hover { text-decoration: underline; }
+        .animated-footer.night-mode .footer-right a { color: #dbe4f0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-right a:hover { color: #ffffff; }
+        
+        .footer-bottom { position: absolute; bottom: 12px; width: 100%; text-align: center; z-index: 10; font-size: 0.75rem; color: #777; letter-spacing: 1px; transition: color 0.5s ease; }
+        .animated-footer.night-mode .footer-bottom { color: #5d6d85; }
+    </style>
+</head>
+<body>
+
+    <header class="w-full shadow-lg relative z-40 flex flex-col">
+        <div id="top-bar" class="bg-[#002366] px-4 md:px-8 py-3 flex flex-col md:flex-row items-center justify-between shadow-sm z-20 gap-3 md:gap-0 transition-colors duration-300 border-b border-white/10">
+            <div class="flex items-center gap-3 w-full md:w-1/3 justify-center md:justify-start">
+                <img src="logo.png" alt="UA Logo" class="w-10 h-10 object-contain bg-white rounded-full p-0.5" onerror="this.src='https://via.placeholder.com/40'">
+                <span id="brand-text" class="font-extrabold text-xl text-white tracking-wide transition-colors duration-300">UA Parking System</span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center text-center">
+                <span id="welcome-text" class="text-white/80 font-semibold text-sm md:text-base transition-colors duration-300"><span id="admin-name-header" class="text-[#FFD700] font-bold">Loading...</span></span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center md:justify-end">
+                <span id="dashboard-title" class="bg-[#FFD700] text-[#002366] px-4 py-1.5 rounded-full text-xs md:text-sm font-bold tracking-wider shadow-sm uppercase transition-colors duration-300">ADMIN DASHBOARD</span>
+            </div>
+        </div>
+
+        <div id="middle-banner" class="h-64 md:h-80 w-full bg-day-fallback relative shadow-inner" style="background-image: url('banner-day.png');">
+            <div class="absolute inset-0 bg-black/10"></div>
+        </div>
+
+        <div id="bottom-nav" class="bg-[#002366] text-white relative shadow-md z-20 border-t border-white/10 transition-colors duration-300">
+            <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-center md:justify-between">
+                <div class="hidden md:block w-10"></div>
+                <nav id="nav-links-container" class="flex items-center justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto whitespace-nowrap px-2 no-scrollbar font-medium text-sm md:text-base w-full md:w-auto">
+                    <a href="admin-home-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Home</a>
+                    <a href="admin-statistics-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Statistics</a>
+                    <a href="admin-vehicle-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Vehicle</a>
+                    <a href="admin-manageaccounts-page.html" class="nav-link active py-2 text-white/90 hover:text-[#FFD700]">Manage Accounts</a>
+                    <a href="admin-contact&information-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Contact & Information</a>
+                    <a href="admin-profile-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Profile</a>
+                </nav>
+                <div class="hidden md:flex items-center justify-end w-10 shrink-0">
+                    <button id="theme-toggle-btn" aria-label="Toggle Theme" class="p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none text-[#FFD700]" title="Toggle Day/Night Mode">
+                        <i id="theme-icon" data-lucide="sun" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="bottom-nav-mobile" class="md:hidden bg-[#001446] py-2 flex justify-center border-t border-white/10 transition-colors duration-300">
+            <button id="theme-toggle-btn-mobile" aria-label="Toggle Theme Mobile" class="flex items-center gap-2 text-sm text-[#FFD700] hover:text-white transition-colors">
+                <i id="theme-icon-mobile" data-lucide="sun" class="w-4 h-4"></i>
+                <span id="theme-text-mobile">Switch to Night Mode</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
+        <h1 class="reveal up text-2xl font-bold text-[#002366] mb-4" data-delay="0">Manage Accounts</h1>
+
+        <div class="reveal up flex flex-wrap gap-3 mb-6" data-delay="100">
+            <button onclick="switchTab('drivers')" id="btn-drivers" class="tab-btn active px-6 py-2.5 rounded-lg border border-gray-300 bg-white font-semibold text-gray-700 hover:bg-gray-50">Show Drivers</button>
+            <button onclick="switchTab('guards')" id="btn-guards" class="tab-btn px-6 py-2.5 rounded-lg border border-gray-300 bg-white font-semibold text-gray-700 hover:bg-gray-50">Show Guards</button>
+            <button onclick="switchTab('admins')" id="btn-admins" class="tab-btn px-6 py-2.5 rounded-lg border border-gray-300 bg-white font-semibold text-gray-700 hover:bg-gray-50">Show Admins</button>
+            <button onclick="switchTab('create')" id="btn-create" class="tab-btn px-6 py-2.5 rounded-lg border border-[#FFD700] bg-[#FFD700] text-[#002366] font-bold hover:bg-[#e6c200]">Create an Account</button>
+        </div>
+
+        <div class="reveal up bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px] transition-colors duration-300" data-delay="200">
+            
+            <div id="view-drivers" class="p-0 overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-700 whitespace-nowrap">
+                    <thead class="bg-gray-50 border-b border-gray-200 transition-colors duration-300">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold">Driver Name</th>
+                            <th class="px-4 py-3 font-semibold">Contact</th>
+                            <th class="px-4 py-3 font-semibold">Email</th>
+                            <th class="px-4 py-3 font-semibold">Vehicle Type</th>
+                            <th class="px-4 py-3 font-semibold">Pass</th>
+                            <th class="px-4 py-3 font-semibold">Plate Number</th>
+                            <th class="px-4 py-3 font-semibold text-center">Payment Status</th>
+                            <th class="px-4 py-3 font-semibold text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="drivers-tbody" class="divide-y divide-gray-100 transition-colors duration-300">
+                        <!-- Dynamically loaded from backend -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="view-guards" class="p-0 overflow-x-auto hidden">
+                <table class="w-full text-left text-sm text-gray-700 whitespace-nowrap">
+                    <thead class="bg-gray-50 border-b border-gray-200 transition-colors duration-300">
+                        <tr>
+                            <th class="px-6 py-3 font-semibold">Guard Name</th>
+                            <th class="px-6 py-3 font-semibold">Contact</th>
+                            <th class="px-6 py-3 font-semibold">Email</th>
+                            <th class="px-6 py-3 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guards-tbody" class="divide-y divide-gray-100 transition-colors duration-300">
+                        <!-- Dynamically loaded from backend -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="view-admins" class="p-0 overflow-x-auto hidden">
+                <table class="w-full text-left text-sm text-gray-700 whitespace-nowrap">
+                    <thead class="bg-gray-50 border-b border-gray-200 transition-colors duration-300">
+                        <tr>
+                            <th class="px-6 py-3 font-semibold">Admin Name</th>
+                            <th class="px-6 py-3 font-semibold">Contact</th>
+                            <th class="px-6 py-3 font-semibold">Email</th>
+                            <th class="px-6 py-3 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admins-tbody" class="divide-y divide-gray-100 transition-colors duration-300">
+                        <!-- Dynamically loaded from backend -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="view-create" class="p-8 hidden max-w-lg mx-auto">
+                <h2 class="text-xl font-bold text-[#002366] mb-6 border-b pb-2">Create New Account</h2>
+                <form id="create-account-form" class="space-y-5" onsubmit="handleCreateAccount(event)">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Select Role</label>
+                        <select class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#002366] transition-colors duration-300 bg-white" required>
+                            <option value="" disabled selected>-- Choose Role --</option>
+                            <option value="guard">Guard Account</option>
+                            <option value="admin">Admin Account</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Username</label>
+                        <input type="text" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#002366] transition-colors duration-300 bg-white" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                        <input type="password" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#002366] transition-colors duration-300 bg-white" required>
+                    </div>
+                    <button type="submit" class="w-full bg-[#002366] hover:bg-[#001845] text-white font-bold py-3 rounded-lg shadow transition mt-6">
+                        Register Account
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="animated-footer" id="animatedFooter">
+        <div id="stars-container"></div>
+        <div class="celestial-body" id="celestial-body"></div>
+        <div id="clouds-container"></div>
+        <div class="cityscape" id="cityscape"></div>
+        
+        <div class="footer-content">
+            <div class="footer-left">
+                <h3>UA PARKING</h3>
+                <p>Campus Vehicle Management System</p>
+            </div>
+            <div class="footer-right">
+                <a href="admin-contact-information-page.html">Help & Support</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+        
+        <div id="cars-container"></div>
+        <div class="road">
+            <div class="road-line"></div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 UNIVERSITY OF THE ASSUMPTION.
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // --- HARDCODED DAY/NIGHT LOGIC ---
+        let isNightMode = false;
+        const topBar = document.getElementById('top-bar');
+        const bottomNav = document.getElementById('bottom-nav');
+        const bottomNavMobile = document.getElementById('bottom-nav-mobile');
+        const middleBanner = document.getElementById('middle-banner');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeToggleBtnMobile = document.getElementById('theme-toggle-btn-mobile');
+        const themeIconMobile = document.getElementById('theme-icon-mobile');
+        const themeTextMobile = document.getElementById('theme-text-mobile');
+        const footer = document.getElementById('animatedFooter');
+
+        function applyThemeStyles() {
+            document.body.classList.toggle('night-mode', isNightMode);
+            footer.classList.toggle('night-mode', isNightMode);
+
+            if (isNightMode) {
+                topBar.classList.replace('bg-[#002366]', 'bg-black');
+                middleBanner.style.backgroundImage = "url('banner-night.png')";
+                middleBanner.classList.replace('bg-day-fallback', 'bg-night-fallback');
+                bottomNav.classList.replace('bg-[#002366]', 'bg-black');
+                bottomNavMobile.classList.replace('bg-[#001446]', 'bg-black');
+                
+                themeIcon.setAttribute('data-lucide', 'moon');
+                themeIconMobile.setAttribute('data-lucide', 'moon');
+                themeTextMobile.textContent = "Switch to Day Mode";
+            } else {
+                topBar.classList.replace('bg-black', 'bg-[#002366]');
+                middleBanner.style.backgroundImage = "url('banner-day.png')";
+                middleBanner.classList.replace('bg-night-fallback', 'bg-day-fallback');
+                bottomNav.classList.replace('bg-black', 'bg-[#002366]');
+                bottomNavMobile.classList.replace('bg-black', 'bg-[#001446]');
+                
+                themeIcon.setAttribute('data-lucide', 'sun');
+                themeIconMobile.setAttribute('data-lucide', 'sun');
+                themeTextMobile.textContent = "Switch to Night Mode";
+            }
+            
+            // Re-render icons after changing the attribute
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            isNightMode = !isNightMode;
+            localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
+            applyThemeStyles();
+        }
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        // Load saved theme from localStorage
+        const savedTheme = localStorage.getItem('themeMode') || 'day';
+        isNightMode = savedTheme === 'night';
+        applyThemeStyles();
+
+        // --- USER SPECIFIC LOGIC ---
+        
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000/api';
+
+        // Load data from backend
+        async function loadData() {
+            // Load user info from localStorage
+            const userRole = localStorage.getItem('userRole') || 'Admin';
+            const currentUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
+            const roleCapitalized = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+            document.getElementById('admin-name-header').textContent = `Welcome ${roleCapitalized}, ${currentUser}`;
+
+            try {
+                // Fetch all users
+                const res = await fetch(`${API_BASE_URL}/users/`);
+                if (!res.ok) throw new Error('API error');
+                const response = await res.json();
+                const users = response.results || response;  // Handle paginated results
+                
+                // Separate users by role
+                const drivers = users.filter(u => u.role === 'driver');
+                const guards = users.filter(u => u.role === 'guard');
+                const admins = users.filter(u => u.role === 'admin');
+                
+                // Load each table
+                loadDriversTable(drivers);
+                loadGuardsTable(guards);
+                loadAdminsTable(admins);
+            } catch (error) {
+                console.warn('Backend unavailable:', error);
+                loadDriversTableLocal();
+                loadGuardsTableLocal();
+                loadAdminsTableLocal();
+            }
+        }
+
+        // Fetch vehicles for a specific driver
+        async function getDriverVehicles(driverId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/vehicles/?owner=${driverId}`);
+                if (!res.ok) return [];
+                const response = await res.json();
+                return response.results || response;  // Handle paginated results
+            } catch (error) {
+                console.warn('Error fetching vehicles:', error);
+                return [];
+            }
+        }
+
+        // Load Drivers Table with real data
+        async function loadDriversTable(drivers) {
+            const tbody = document.getElementById('drivers-tbody');
+            tbody.innerHTML = '';
+
+            for (const driver of drivers) {
+                const vehicles = await getDriverVehicles(driver.id);
+                
+                if (vehicles.length > 0) {
+                    for (const vehicle of vehicles) {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                        row.setAttribute('data-driver-id', driver.id);
+                        row.setAttribute('data-vehicle-id', vehicle.id);
+                        
+                        const fullName = `${driver.first_name} ${driver.last_name}`.trim() || driver.username;
+                        const paymentStatus = vehicle.is_paid ? 'PAID' : 'UNPAID';
+                        const paymentColor = vehicle.is_paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                        
+                        row.innerHTML = `
+                            <td class="px-4 py-3 font-bold">${fullName}</td>
+                            <td class="px-4 py-3">${driver.phone_number || 'N/A'}</td>
+                            <td class="px-4 py-3">${driver.email}</td>
+                            <td class="px-4 py-3">${vehicle.vehicle_type || 'Unknown'}</td>
+                            <td class="px-4 py-3 text-[#002366] font-bold">Park</td>
+                            <td class="px-4 py-3">${vehicle.plate_number || 'N/A'}</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="${paymentColor} px-3 py-1 rounded font-bold inline-block">${paymentStatus}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button onclick="confirmDelete(this, 'vehicle')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition-colors">Delete Vehicle</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                } else {
+                    // Show driver with no vehicles
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                    row.setAttribute('data-driver-id', driver.id);
+                    
+                    const fullName = `${driver.first_name} ${driver.last_name}`.trim() || driver.username;
+                    
+                    row.innerHTML = `
+                        <td class="px-4 py-3 font-bold">${fullName}</td>
+                        <td class="px-4 py-3">${driver.phone_number || 'N/A'}</td>
+                        <td class="px-4 py-3">${driver.email}</td>
+                        <td class="px-4 py-3 text-gray-400">No Vehicle</td>
+                        <td class="px-4 py-3 text-gray-400">-</td>
+                        <td class="px-4 py-3 text-gray-400">-</td>
+                        <td class="px-4 py-3 text-center text-gray-400">-</td>
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="confirmDelete(this, 'driver account')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition-colors">Delete Account</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            }
+
+            if (drivers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">No drivers found</td></tr>';
+            }
+        }
+
+        // Load Guards Table with real data
+        function loadGuardsTable(guards) {
+            const tbody = document.getElementById('guards-tbody');
+            tbody.innerHTML = '';
+
+            guards.forEach(guard => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                row.setAttribute('data-guard-id', guard.id);
+                
+                const fullName = `${guard.first_name} ${guard.last_name}`.trim() || guard.username;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-bold">${fullName}</td>
+                    <td class="px-6 py-4">${guard.phone_number || 'N/A'}</td>
+                    <td class="px-6 py-4">${guard.email}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="confirmDelete(this, 'guard account')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded shadow transition-colors">Delete Guard Account</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            if (guards.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No guards found</td></tr>';
+            }
+        }
+
+        // Load Admins Table with real data
+        function loadAdminsTable(admins) {
+            const tbody = document.getElementById('admins-tbody');
+            tbody.innerHTML = '';
+
+            admins.forEach(admin => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                row.setAttribute('data-admin-id', admin.id);
+                
+                const fullName = `${admin.first_name} ${admin.last_name}`.trim() || admin.username;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-bold">${fullName}</td>
+                    <td class="px-6 py-4">${admin.phone_number || 'N/A'}</td>
+                    <td class="px-6 py-4">${admin.email}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="confirmDelete(this, 'admin account')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded shadow transition-colors">Delete Admin Account</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            if (admins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No admins found</td></tr>';
+            }
+        }
+
+        // Fallback local data loaders
+        function loadDriversTableLocal() {
+            document.getElementById('drivers-tbody').innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Backend unavailable. Please check your connection and refresh the page.</td></tr>';
+        }
+
+        function loadGuardsTableLocal() {
+            document.getElementById('guards-tbody').innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Backend unavailable. Please check your connection and refresh the page.</td></tr>';
+        }
+
+        function loadAdminsTableLocal() {
+            document.getElementById('admins-tbody').innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Backend unavailable. Please check your connection and refresh the page.</td></tr>';
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+                if(el.id !== 'btn-create') { el.classList.add('bg-white', 'text-gray-700'); }
+            });
+
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if(tabId !== 'create') {
+                activeBtn.classList.add('active');
+                activeBtn.classList.remove('bg-white', 'text-gray-700');
+            }
+        }
+
+        // Form Submit Handler
+        async function handleCreateAccount(event) {
+            event.preventDefault(); 
+            
+            const form = event.target;
+            const roleSelect = form.querySelector('select');
+            const usernameInput = form.querySelector('input[type="text"]');
+            const passwordInput = form.querySelector('input[type="password"]');
+            
+            const role = roleSelect.value;
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!role || !username || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        role: role,
+                        first_name: username,
+                        last_name: ''
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Account Successfully Created!');
+                    form.reset();
+                    switchTab(role === 'guard' ? 'guards' : 'admins');
+                    loadData(); // Refresh the table
+                } else {
+                    const data = await response.json();
+                    alert('Error creating account: ' + JSON.stringify(data));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating account. Please try again.');
+            }
+        }
+
+        // Payment Toggle - Update backend
+        // Payment status is now read-only and displays from backend is_paid field
+
+        // Deletion with Backend Integration
+        async function confirmDelete(btn, type) {
+            if (confirm(`Are you sure you want to delete this ${type}?`)) {
+                const row = btn.closest('tr');
+                const vehicleId = row.getAttribute('data-vehicle-id');
+                const driverId = row.getAttribute('data-driver-id');
+                const guardId = row.getAttribute('data-guard-id');
+                const adminId = row.getAttribute('data-admin-id');
+
+                try {
+                    let endpoint = '';
+                    if (vehicleId && type === 'vehicle') {
+                        // Only delete vehicle, not the driver
+                        endpoint = `${API_BASE_URL}/vehicles/${vehicleId}/`;
+                    } else if (driverId && type === 'driver account') {
+                        // Delete the entire driver user account
+                        endpoint = `${API_BASE_URL}/users/${driverId}/`;
+                    } else if (guardId && type === 'guard account') {
+                        endpoint = `${API_BASE_URL}/users/${guardId}/`;
+                    } else if (adminId && type === 'admin account') {
+                        endpoint = `${API_BASE_URL}/users/${adminId}/`;
+                    }
+
+                    if (!endpoint) {
+                        console.warn('No valid ID found for deletion');
+                        return;
+                    }
+
+                    const response = await fetch(endpoint, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok || response.status === 204) {
+                        // If deleting a driver/guard/admin account, refresh all data
+                        if (type.includes('account')) {
+                            await loadData();
+                        } else {
+                            // Just remove the row for vehicle deletion
+                            row.remove();
+                        }
+                        alert(`${type} deleted successfully`);
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error('Delete error:', errorData);
+                        alert('Error deleting ' + type + ': ' + JSON.stringify(errorData));
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error deleting ' + type);
+                }
+            }
+        }
+
+        // Scroll Reveal Initialization
+        document.addEventListener("DOMContentLoaded", () => {
+            loadData();
+            
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        setTimeout(() => { el.classList.add('is-visible'); }, parseInt(el.getAttribute('data-delay')) || 0);
+                        obs.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.15 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        });
+
+        // --- FOOTER LOGIC (Animations) ---
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 40; i++) {
+            let star = document.createElement('div');
+            star.classList.add('star');
+            let size = Math.random() * 2;
+            star.style.width = `${size}px`; star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`; star.style.top = `${Math.random() * 120}px`;
+            star.style.setProperty('--star-opacity', Math.random() * 0.8 + 0.1);
+            starsContainer.appendChild(star);
+        }
+
+        const cityscape = document.getElementById('cityscape');
+        // Setup initial buildings based on screen size
+        function initBuildings() {
+            cityscape.innerHTML = ''; // Clear existing
+            const numBuildings = Math.floor(window.innerWidth / 30); 
+            for (let i = 0; i < numBuildings; i++) {
+                let building = document.createElement('div'); building.classList.add('building');
+                let width = Math.random() * 35 + 25; let height = Math.random() * 70 + 20; 
+                building.style.width = `${width}px`; building.style.height = `${height}px`;
+                const windowSize = 4; const gap = 4; const padding = 5; 
+                const cols = Math.floor((width - (padding * 2) + gap) / (windowSize + gap));
+                const rows = Math.floor((height - (padding * 2) + gap) / (windowSize + gap));
+                for (let r = 0; r < rows; r++) { 
+                    for (let c = 0; c < cols; c++) {
+                        if (Math.random() > 0.65) {
+                            let win = document.createElement('div'); win.classList.add('window');
+                            win.style.width = `${windowSize}px`; win.style.height = `${windowSize}px`;
+                            win.style.left = `${padding + c * (windowSize + gap)}px`; win.style.top = `${padding + r * (windowSize + gap)}px`;
+                            building.appendChild(win);
+                        }
+                    }
+                }
+                cityscape.appendChild(building);
+            }
+        }
+        initBuildings();
+
+        // Handle resizing to redraw buildings
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(initBuildings, 300);
+        });
+
+        const cloudsContainer = document.getElementById('clouds-container');
+        const clouds = [];
+        for (let i = 0; i < 4; i++) {
+            let cloud = document.createElement('div'); cloud.classList.add('cloud');
+            let width = Math.random() * 50 + 70; let height = width / 3;
+            let top = Math.random() * 40 + 5; let speed = Math.random() * 0.3 + 0.1;
+            let xPos = Math.random() * window.innerWidth;
+            cloud.style.width = `${width}px`; cloud.style.height = `${height}px`; cloud.style.top = `${top}px`;
+            cloudsContainer.appendChild(cloud);
+            clouds.push({ element: cloud, x: xPos, speed: speed });
+        }
+
+        const carsContainer = document.getElementById('cars-container');
+        const cars = [];
+        for (let i = 0; i < 3; i++) { 
+            let car = document.createElement('div'); car.classList.add('car');
+            let speed = Math.random() * 1.5 + 1.2; let xPos = Math.random() * window.innerWidth;
+            carsContainer.appendChild(car);
+            cars.push({ element: car, x: xPos, speed: speed });
+        }
+
+        function animateFooter() {
+            clouds.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 150) { c.x = -150; c.element.style.top = `${Math.random() * 40 + 5}px`; }
+                c.element.style.left = `${c.x}px`;
+            });
+            cars.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 60) { c.x = -60; } 
+                c.element.style.left = `${c.x}px`;
+            });
+            requestAnimationFrame(animateFooter);
+        }
+        animateFooter();
+    </script>
+</body>
+</html>

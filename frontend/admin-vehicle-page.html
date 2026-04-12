@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Vehicles - UA Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- GLOBAL & BODY STYLES --- */
+        body {
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+        }
+        body.night-mode { background-color: #0d1117; color: #e2e8f0; }
+
+        /* --- HEADER & NAVIGATION STYLES --- */
+        #middle-banner {
+            transition: background-image 0.5s ease-in-out;
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+        }
+        .bg-day-fallback { background-color: #87CEEB; }
+        .bg-night-fallback { background-color: #0f172a; }
+
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            display: block; margin-top: 5px; right: 0; background: #FFD700;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; left: 0; background: #FFD700; }
+        .nav-link:hover, .nav-link.active { color: #FFD700; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --- USER SPECIFIC COMPONENT STYLES --- */
+        .encrypted { font-family: monospace; letter-spacing: 2px; color: #a1a1aa !important; transition: color 0.3s ease; }
+
+        /* --- SCROLL REVEAL ANIMATIONS --- */
+        .reveal { opacity: 0; transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.up { transform: translateY(40px); }
+        .reveal.is-visible { opacity: 1; transform: none !important; }
+
+        /* --- NIGHT MODE OVERRIDES FOR USER CONTENT --- */
+        body.night-mode .bg-white { background-color: #1a2235 !important; border-color: #2a3752 !important; color: #e2e8f0; }
+        body.night-mode h1, body.night-mode h2, body.night-mode .text-\[\#002366\] { color: #e2e8f0 !important; }
+        body.night-mode .text-gray-700, body.night-mode .text-gray-600, body.night-mode .text-gray-500 { color: #cbd5e1 !important; }
+        body.night-mode .bg-gray-50 { background-color: #111827 !important; color: #cbd5e1 !important; border-color: #2a3752 !important;}
+        body.night-mode .bg-\[\#002366\] { background-color: #0f172a !important; border-bottom: 1px solid #2a3752; }
+        body.night-mode .border-gray-200, body.night-mode .border-gray-100, body.night-mode hr.border-gray-200 { border-color: #2a3752 !important; }
+        body.night-mode .divide-y > :not([hidden]) ~ :not([hidden]) { border-color: #2a3752 !important; }
+        body.night-mode .hover\:bg-gray-50:hover { background-color: #1f2937 !important; }
+        body.night-mode .bg-gray-100 { background-color: #1f2937 !important; color: #e2e8f0 !important; }
+        body.night-mode .bg-gray-100:hover { background-color: #374151 !important; }
+        body.night-mode input { color: #e2e8f0; }
+        body.night-mode input[type="date"] { color-scheme: dark; color: #e2e8f0; }
+        body.night-mode .encrypted { color: #64748b !important; }
+        
+        /* Modal Night Mode */
+        body.night-mode #pricing-modal { background-color: rgba(0, 0, 0, 0.7); }
+        body.night-mode #pricing-modal .bg-white { background-color: #1a2235 !important; }
+        body.night-mode #pricing-modal input,
+        body.night-mode #pricing-modal select { 
+            background-color: #0f172a !important; 
+            color: #e2e8f0 !important; 
+            border-color: #2a3752 !important; 
+        }
+        body.night-mode #pricing-modal label { color: #e2e8f0 !important; }
+        body.night-mode #pricing-modal button { transition-colors: all 0.3s ease; }
+
+        /* --- FOOTER STYLES --- */
+        .animated-footer {
+            position: relative; margin-top: auto; height: 180px; width: 100%;
+            background: linear-gradient(to bottom, #d4f0ff 0%, #e6f7ff 100%);
+            overflow: hidden; border-top: 2px solid #bce6ff;
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        .animated-footer.night-mode { background: linear-gradient(to bottom, #0a1020 0%, #17243b 100%); border-top: 2px solid #283752; }
+        .celestial-body {
+            position: absolute; top: 15px; right: 10%; width: 50px; height: 50px;
+            background-color: rgba(255, 235, 59, 0.8); border-radius: 50%;
+            box-shadow: 0 0 30px 15px rgba(255, 235, 59, 0.4); z-index: 1; transition: all 0.5s ease;
+        }
+        .animated-footer.night-mode .celestial-body { width: 45px; height: 45px; background-color: #fcf9e3; box-shadow: 0 0 25px 10px rgba(252, 249, 227, 0.2); }
+        .star { position: absolute; background-color: white; border-radius: 50%; z-index: 0; opacity: 0; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .star { opacity: var(--star-opacity); }
+        .cloud, .cloud::before, .cloud::after { background: white; transition: background 0.5s ease; }
+        .cloud { position: absolute; border-radius: 50px; z-index: 2; opacity: 0.9; }
+        .cloud::before, .cloud::after { content: ''; position: absolute; border-radius: 50%; }
+        .cloud::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+        .cloud::after { width: 40px; height: 40px; top: -15px; right: 15px; }
+        .animated-footer.night-mode .cloud, .animated-footer.night-mode .cloud::before, .animated-footer.night-mode .cloud::after { background: rgba(255, 255, 255, 0.05); }
+        .cityscape { position: absolute; bottom: 40px; width: 100%; height: 90px; display: flex; align-items: flex-end; z-index: 3; }
+        .building { background-color: rgba(160, 220, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.4); border-bottom: none; box-sizing: border-box; position: relative; overflow: hidden; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .building { background-color: rgba(15, 22, 35, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); border-bottom: none; }
+        .window { position: absolute; background-color: rgba(255, 255, 255, 0.85); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .window { background-color: rgba(255, 240, 150, 0.85); box-shadow: 0 0 3px rgba(255, 240, 150, 0.5); }
+        .road { position: absolute; bottom: 0; width: 100%; height: 40px; background-color: #e0e0e0; border-top: 2px solid #ccc; z-index: 4; display: flex; align-items: center; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .road { background-color: #1e2430; border-top: 2px solid #11151c; }
+        .road-line { width: 100%; height: 2px; background-image: linear-gradient(90deg, #fff 50%, transparent 50%); background-size: 30px 2px; opacity: 0.5; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .road-line { opacity: 0.15; }
+        .car { position: absolute; bottom: 12px; width: 45px; height: 16px; background-color: #ffffff; border-radius: 8px; z-index: 5; box-shadow: 2px 2px 4px rgba(0,0,0,0.15); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .car { background-color: #8c97a6; box-shadow: 15px 0 10px -3px rgba(255, 255, 200, 0.5); }
+        .footer-content { position: absolute; bottom: 40px; width: 100%; padding: 0 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10; pointer-events: none; }
+        .footer-left { color: #00265e; transition: color 0.5s ease; }
+        .footer-left h3 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; text-transform: uppercase; transition: text-shadow 0.5s ease;}
+        .footer-left p { margin: 3px 0 12px 0; font-size: 0.85rem; color: #555; transition: color 0.5s ease;}
+        .animated-footer.night-mode .footer-left { color: #dbe4f0; }
+        .animated-footer.night-mode .footer-left h3 { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-left p { color: #8fa0b5; }
+        .footer-right { margin-bottom: 12px; pointer-events: auto; }
+        .footer-right a { color: #00265e; text-decoration: none; margin-left: 20px; font-size: 0.85rem; font-weight: 600; transition: color 0.5s ease, text-shadow 0.5s ease; }
+        .footer-right a:hover { text-decoration: underline; }
+        .animated-footer.night-mode .footer-right a { color: #dbe4f0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-right a:hover { color: #ffffff; }
+        .footer-bottom { position: absolute; bottom: 12px; width: 100%; text-align: center; z-index: 10; font-size: 0.75rem; color: #777; letter-spacing: 1px; transition: color 0.5s ease; }
+        .animated-footer.night-mode .footer-bottom { color: #5d6d85; }
+    </style>
+</head>
+<body>
+
+    <header class="w-full shadow-lg relative z-40 flex flex-col">
+        <div id="top-bar" class="bg-[#002366] px-4 md:px-8 py-3 flex flex-col md:flex-row items-center justify-between shadow-sm z-20 gap-3 md:gap-0 transition-colors duration-300 border-b border-white/10">
+            <div class="flex items-center gap-3 w-full md:w-1/3 justify-center md:justify-start">
+                <img src="logo.png" alt="UA Logo" class="w-10 h-10 object-contain bg-white rounded-full p-0.5">
+                <span id="brand-text" class="font-extrabold text-xl text-white tracking-wide transition-colors duration-300">UA Parking System</span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center text-center">
+                <span id="welcome-text" class="text-white/80 font-semibold text-sm md:text-base transition-colors duration-300"><span id="admin-name-header" class="text-[#FFD700] font-bold">Loading...</span></span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center md:justify-end">
+                <span id="dashboard-title" class="bg-[#FFD700] text-[#002366] px-4 py-1.5 rounded-full text-xs md:text-sm font-bold tracking-wider shadow-sm uppercase transition-colors duration-300">ADMIN DASHBOARD</span>
+            </div>
+        </div>
+
+        <div id="middle-banner" class="h-64 md:h-80 w-full bg-day-fallback relative shadow-inner" style="background-image: url('banner-day.png');">
+            <div class="absolute inset-0 bg-black/10"></div>
+        </div>
+
+        <div id="bottom-nav" class="bg-[#002366] text-white relative shadow-md z-20 border-t border-white/10 transition-colors duration-300">
+            <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-center md:justify-between">
+                <div class="hidden md:block w-10"></div>
+                <nav id="nav-links-container" class="flex items-center justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto whitespace-nowrap px-2 no-scrollbar font-medium text-sm md:text-base w-full md:w-auto">
+                    <a href="admin-home-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Home</a>
+                    <a href="admin-statistics-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Statistics</a>
+                    <a href="admin-vehicle-page.html" class="nav-link active py-2 text-white/90 hover:text-[#FFD700]">Vehicle</a>
+                    <a href="admin-manageaccounts-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Manage Accounts</a>
+                    <a href="admin-contact&information-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Contact & Information</a>
+                    <a href="admin-profile-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Profile</a>
+                </nav>
+                <div class="hidden md:flex items-center justify-end w-10 shrink-0">
+                    <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none text-[#FFD700]" title="Toggle Day/Night Mode">
+                        <i id="theme-icon" data-lucide="sun" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="bottom-nav-mobile" class="md:hidden bg-[#001446] py-2 flex justify-center border-t border-white/10 transition-colors duration-300">
+            <button id="theme-toggle-btn-mobile" class="flex items-center gap-2 text-sm text-[#FFD700] hover:text-white transition-colors">
+                <i id="theme-icon-mobile" data-lucide="sun" class="w-4 h-4"></i>
+                <span id="theme-text-mobile">Switch to Night Mode</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-10 relative z-10">
+
+        <div class="reveal up space-y-6" data-delay="0">
+            <div>
+                <h1 class="text-3xl font-bold text-[#002366] transition-colors duration-300">Vehicle Registration Management</h1>
+                <p class="text-gray-500 text-sm mt-1 transition-colors duration-300">Manage all registered vehicles, approve payments, and verify QR codes.</p>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Search by Plate Number</label>
+                        <input id="search-plate" type="text" placeholder="e.g. ABC1234" 
+                               class="w-full border border-gray-300 rounded-lg p-2.5 focus:border-[#002366] outline-none transition">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Filter by Status</label>
+                        <select id="filter-status" class="w-full border border-gray-300 rounded-lg p-2.5 focus:border-[#002366] outline-none transition">
+                            <option value="">All Vehicles</option>
+                            <option value="paid">Paid Only</option>
+                            <option value="unpaid">Unpaid Only</option>
+                            <option value="registered">Registered Only</option>
+                            <option value="pending">Pending Only</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadAllVehicles()" class="w-full md:w-auto bg-[#002366] text-white px-6 py-2.5 rounded-lg hover:bg-[#001845] transition font-semibold">
+                            Apply Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicles Table -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-100 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Vehicle Info</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Driver</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Plate</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Registration</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Payment</th>
+                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">QR Code</th>
+                                <th class="px-6 py-4 text-center text-sm font-bold text-gray-700">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vehicles-table-body">
+                            <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Loading vehicles...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-gray-200 transition-colors duration-300">
+
+        <div class="reveal up space-y-4" data-delay="150">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-[#002366] transition-colors duration-300">Shared Vehicle Logs</h1>
+                    <p class="text-gray-500 text-sm mt-1 transition-colors duration-300">Campus-wide time-in and time-out records.</p>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-300 shadow-sm transition-colors duration-300">
+                        <label for="log-date" class="font-semibold text-gray-600 text-sm transition-colors duration-300">Select Date:</label>
+                        <input type="date" id="log-date" class="outline-none text-[#002366] font-bold bg-transparent text-sm transition-colors duration-300">
+                    </div>
+                    <button onclick="toggleEncryption(true)" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg shadow font-bold text-sm flex items-center gap-2 transition-colors">
+                        <i data-lucide="lock" class="w-4 h-4"></i> Encrypt
+                    </button>
+                    <button onclick="toggleEncryption(false)" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg shadow font-bold text-sm flex items-center gap-2 transition-colors">
+                        <i data-lucide="unlock" class="w-4 h-4"></i> Decrypt
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-colors duration-300">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-700 whitespace-nowrap transition-colors duration-300" id="logs-table">
+                        <thead class="bg-[#002366] text-white transition-colors duration-300">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Date</th>
+                                <th class="px-6 py-4 font-semibold">Driver Name</th>
+                                <th class="px-6 py-4 font-semibold">Vehicle Type</th>
+                                <th class="px-6 py-4 font-semibold">Plate Number</th>
+                                <th class="px-6 py-4 font-semibold">Time-In</th>
+                                <th class="px-6 py-4 font-semibold">Time-Out</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 transition-colors duration-300" id="vehicle-logs-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-gray-200 transition-colors duration-300">
+
+        <div class="reveal up space-y-4" data-delay="150">
+            <h2 class="text-2xl font-bold text-[#002366] transition-colors duration-300">Vehicle Registration Prices</h2>
+            <p class="text-sm text-gray-500 transition-colors duration-300">Changes made here will update the pricing table on the Driver's interface.</p>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-x-auto transition-colors duration-300">
+                <table class="w-full text-left text-sm text-gray-700 border-collapse transition-colors duration-300" id="pricing-table">
+                    <thead class="bg-gray-50 text-gray-600 transition-colors duration-300">
+                        <tr>
+                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Pass Type</th>
+                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Vehicle Type</th>
+                            <th class="border-b border-gray-200 p-3 font-bold w-32 transition-colors duration-300">Price</th>
+                            <th class="border-b border-gray-200 p-3 font-bold w-48 text-center transition-colors duration-300">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="transition-colors duration-300" id="pricing-tbody">
+                    </tbody>
+                </table>
+                <button id="add-pricing-btn" class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 w-full flex items-center justify-center gap-2 transition-colors duration-300">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Add New Pricing Tier
+                </button>
+            </div>
+        </div>
+
+        <!-- Add/Edit Pricing Modal -->
+        <div id="pricing-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md max-h-96 overflow-y-auto transition-colors duration-300">
+                <h3 class="text-xl font-bold text-[#002366] mb-4">Add New Pricing Tier</h3>
+                
+                <form id="pricing-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Pass Type</label>
+                        <select id="modal-pass-type" class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-blue-500 transition-colors duration-300" required>
+                            <option value="">Select Pass Type</option>
+                            <option value="drop-off">Drop-Off</option>
+                            <option value="park">Park</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Vehicle Type</label>
+                        <input type="text" id="modal-vehicle-type" class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-blue-500 transition-colors duration-300" placeholder="Enter vehicle type" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Price (PHP)</label>
+                        <input type="number" id="modal-price" step="0.01" min="0" class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-blue-500 transition-colors duration-300" placeholder="0.00" required>
+                    </div>
+
+                    <div class="flex gap-2 pt-4">
+                        <button type="button" id="modal-cancel-btn" class="flex-1 bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded hover:bg-gray-400 transition-colors duration-300">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600 transition-colors duration-300">
+                            Save Pricing Tier
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="animated-footer" id="animatedFooter">
+        <div id="stars-container"></div>
+        <div class="celestial-body" id="celestial-body"></div>
+        <div id="clouds-container"></div>
+        <div class="cityscape" id="cityscape"></div>
+        <div class="footer-content">
+            <div class="footer-left">
+                <h3>UA PARKING</h3>
+                <p>Campus Vehicle Management System</p>
+            </div>
+            <div class="footer-right">
+                <a href="admin-contact&information-page.html">Help & Support</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+        <div id="cars-container"></div>
+        <div class="road">
+            <div class="road-line"></div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 UNIVERSITY OF THE ASSUMPTION.
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000/api';
+
+        // ===== VEHICLE MANAGEMENT FUNCTIONS =====
+        
+        // Load all vehicles
+        async function loadAllVehicles() {
+            try {
+                const searchPlate = document.getElementById('search-plate')?.value || '';
+                const filterStatus = document.getElementById('filter-status')?.value || '';
+                
+                const response = await fetch(`${API_BASE_URL}/vehicles/`);
+                if (!response.ok) throw new Error('Failed to fetch vehicles');
+                
+                const data = await response.json();
+                let vehicles = Array.isArray(data) ? data : (data.results || []);
+                
+                // Apply filters
+                if (searchPlate) {
+                    vehicles = vehicles.filter(v => v.plate_number.toLowerCase().includes(searchPlate.toLowerCase()));
+                }
+                
+                if (filterStatus === 'paid') {
+                    vehicles = vehicles.filter(v => v.is_paid);
+                } else if (filterStatus === 'unpaid') {
+                    vehicles = vehicles.filter(v => !v.is_paid);
+                } else if (filterStatus === 'registered') {
+                    vehicles = vehicles.filter(v => v.is_registered);
+                } else if (filterStatus === 'pending') {
+                    vehicles = vehicles.filter(v => !v.is_registered);
+                }
+                
+                const tbody = document.getElementById('vehicles-table-body');
+                
+                if (vehicles.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No vehicles found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = vehicles.map(vehicle => `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="car" class="w-5 h-5 text-[#5A6EA0]"></i>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${vehicle.brand} ${vehicle.model}</p>
+                                    <p class="text-xs text-gray-500">${vehicle.vehicle_type.toUpperCase()} - ${vehicle.color || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="text-gray-800">${vehicle.owner_name}</p>
+                            <p class="text-xs text-gray-500">ID: ${vehicle.owner}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="font-mono font-bold text-[#002366]">${vehicle.plate_number}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded text-xs font-semibold ${vehicle.is_registered ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}">
+                                ${vehicle.is_registered ? '✓ Registered' : '⏳ Pending'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded text-xs font-semibold ${vehicle.is_paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                                ${vehicle.is_paid ? '✓ Paid' : '✗ Unpaid'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            ${vehicle.qr_code ? `
+                                <a href="${vehicle.qr_code}" target="_blank" class="text-[#002366] hover:text-[#FFD700] font-semibold flex items-center justify-center gap-1">
+                                    <i data-lucide="qr-code" class="w-4 h-4"></i>
+                                    View
+                                </a>
+                            ` : '<span class="text-gray-400 text-sm">Generating...</span>'}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex gap-2 justify-center flex-wrap">
+                                ${!vehicle.is_paid ? `
+                                    <button onclick="markPaid(${vehicle.id})" class="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition font-semibold">
+                                        Unblur QR
+                                    </button>
+                                ` : `
+                                    <button onclick="markUnpaid(${vehicle.id})" class="px-3 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600 transition font-semibold">
+                                        Blur QR
+                                    </button>
+                                `}
+                                <button onclick="deleteVehicleBtn(${vehicle.id})" class="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition font-semibold">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                lucide.createIcons();
+                
+            } catch (error) {
+                console.error('Error loading vehicles:', error);
+                document.getElementById('vehicles-table-body').innerHTML = `
+                    <tr><td colspan="7" class="px-6 py-8">
+                        <div class="bg-red-50 border border-red-200 p-4 rounded">
+                            <p class="text-red-700 font-semibold">Error loading vehicles: ${error.message}</p>
+                        </div>
+                    </td></tr>
+                `;
+            }
+        }
+
+        // Mark vehicle as paid (Unblur QR)
+        async function markPaid(vehicleId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/mark_paid/`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('✓ QR Code unblurred! Vehicle is now visible to driver.');
+                    loadAllVehicles();
+                } else {
+                    throw new Error('Failed to unblur QR code');
+                }
+            } catch (error) {
+                console.error('Error unblurring QR code:', error);
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+
+        // Mark vehicle as unpaid (Blur QR)
+        async function markUnpaid(vehicleId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/mark_unpaid/`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('✓ QR Code blurred! Vehicle is now hidden from driver.');
+                    loadAllVehicles();
+                } else {
+                    throw new Error('Failed to blur QR code');
+                }
+            } catch (error) {
+                console.error('Error blurring QR code:', error);
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+
+        // Delete vehicle
+        async function deleteVehicleBtn(vehicleId) {
+            if (!confirm('Are you sure you want to delete this vehicle? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('✓ Vehicle deleted successfully!');
+                    loadAllVehicles();
+                } else {
+                    throw new Error('Failed to delete vehicle');
+                }
+            } catch (error) {
+                console.error('Error deleting vehicle:', error);
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+
+        // ===== END VEHICLE MANAGEMENT FUNCTIONS =====
+
+        // Load data from backend
+        async function loadData() {
+            // Load user info from localStorage
+            const userRole = localStorage.getItem('userRole') || 'Admin';
+            const currentUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
+            const roleCapitalized = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+            document.getElementById('admin-name-header').textContent = `Welcome ${roleCapitalized}, ${currentUser}`;
+
+            try {
+                // Fetch parking sessions and parking rates
+                const [sessionsRes, ratesRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/parking-sessions/`),
+                    fetch(`${API_BASE_URL}/parking-rates/`)
+                ]);
+
+                if (!sessionsRes.ok || !ratesRes.ok) {
+                    throw new Error('API error');
+                }
+
+                const sessionsData = await sessionsRes.json();
+                const ratesData = await ratesRes.json();
+
+                // Handle paginated responses
+                const sessions = Array.isArray(sessionsData) ? sessionsData : (sessionsData.results || []);
+                const rates = Array.isArray(ratesData) ? ratesData : (ratesData.results || []);
+
+                // Populate vehicle logs
+                loadVehicleLogs(sessions);
+                // Populate pricing table
+                loadPricingTable(rates);
+
+            } catch (error) {
+                console.warn('Backend unavailable, using fallback:', error);
+                loadVehicleLogsLocal();
+                loadPricingTableLocal();
+            }
+        }
+
+        function loadVehicleLogs(sessions) {
+            const tbody = document.getElementById('vehicle-logs-tbody');
+            tbody.innerHTML = '';
+
+            sessions.forEach(session => {
+                const vehicleInfo = session.vehicle_info || {};
+                const date = new Date(session.time_in).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                const timeIn = new Date(session.time_in).toLocaleTimeString('en-US');
+                const timeOut = session.time_out ? new Date(session.time_out).toLocaleTimeString('en-US') : 'null';
+                const driverName = session.vehicle_info?.owner_name || 'Unknown';
+                const vehicleType = vehicleInfo.vehicle_type ? vehicleInfo.vehicle_type.charAt(0).toUpperCase() + vehicleInfo.vehicle_type.slice(1) : 'Unknown';
+                const plateNumber = vehicleInfo.plate_number || 'N/A';
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                row.setAttribute('data-session-id', session.id);
+                row.innerHTML = `
+                    <td class="px-6 py-4 data-cell" data-val="${date}">${date}</td>
+                    <td class="px-6 py-4 font-medium data-cell" data-val="${driverName}">${driverName}</td>
+                    <td class="px-6 py-4 data-cell" data-val="${vehicleType}">${vehicleType}</td>
+                    <td class="px-6 py-4 font-bold text-[#002366] data-cell transition-colors duration-300" data-val="${plateNumber}">${plateNumber}</td>
+                    <td class="px-6 py-4 text-green-600 font-semibold data-cell" data-val="${timeIn}">${timeIn}</td>
+                    <td class="px-6 py-4 text-blue-600 font-semibold data-cell" data-val="${timeOut}">${timeOut}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Apply encryption state if it's currently encrypted
+            if (localStorage.getItem('isDataEncrypted') === 'true') {
+                applyEncryption(true);
+            }
+        }
+
+        function loadVehicleLogsLocal() {
+            // Fallback - show message to user
+            const tbody = document.getElementById('vehicle-logs-tbody');
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No vehicle logs available</td></tr>';
+        }
+
+        function loadPricingTable(rates) {
+            const tbody = document.getElementById('pricing-tbody');
+            tbody.innerHTML = '';
+
+            if (rates.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="border-b border-gray-100 p-3 text-center text-gray-500">No pricing data available</td></tr>';
+                return;
+            }
+
+            rates.forEach(rate => {
+                const passType = rate.pass_type.charAt(0).toUpperCase() + rate.pass_type.slice(1);
+                const vehicleType = rate.vehicle_type.charAt(0).toUpperCase() + rate.vehicle_type.slice(1);
+                const price = `${parseFloat(rate.price).toFixed(2)} PHP`;
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 price-row transition-colors duration-300 border-b border-gray-100';
+                row.setAttribute('data-rate-id', rate.id);
+                row.innerHTML = `
+                    <td class="p-3 transition-colors duration-300 font-medium text-gray-800">${passType}</td>
+                    <td class="p-3 transition-colors duration-300 font-medium text-gray-800">${vehicleType}</td>
+                    <td class="p-3 transition-colors duration-300 font-bold text-green-700">${price}</td>
+                    <td class="p-3 flex justify-center gap-2 transition-colors duration-300">
+                        <button onclick="editPricingTier(this)" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-xs font-semibold">Edit</button>
+                        <button onclick="deletePricingTier(this)" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-xs font-semibold">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function loadPricingTableLocal() {
+            // Fallback - show message
+            const tbody = document.getElementById('pricing-tbody');
+            tbody.innerHTML = '<tr><td colspan="4" class="border-b border-gray-100 p-3 text-center text-gray-500">No pricing data available</td></tr>';
+        }
+
+        // --- HARDCODED DAY/NIGHT LOGIC ---
+        let isNightMode = false;
+        const topBar = document.getElementById('top-bar');
+        const bottomNav = document.getElementById('bottom-nav');
+        const bottomNavMobile = document.getElementById('bottom-nav-mobile');
+        const middleBanner = document.getElementById('middle-banner');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeToggleBtnMobile = document.getElementById('theme-toggle-btn-mobile');
+        const themeIconMobile = document.getElementById('theme-icon-mobile');
+        const themeTextMobile = document.getElementById('theme-text-mobile');
+        const footer = document.getElementById('animatedFooter');
+
+        function applyThemeStyles() {
+            document.body.classList.toggle('night-mode', isNightMode);
+            footer.classList.toggle('night-mode', isNightMode);
+
+            if (isNightMode) {
+                topBar.classList.replace('bg-[#002366]', 'bg-black');
+                middleBanner.style.backgroundImage = "url('banner-night.png')";
+                middleBanner.classList.replace('bg-day-fallback', 'bg-night-fallback');
+                bottomNav.classList.replace('bg-[#002366]', 'bg-black');
+                bottomNavMobile.classList.replace('bg-[#001446]', 'bg-black');
+                themeIcon.setAttribute('data-lucide', 'moon');
+                themeIconMobile.setAttribute('data-lucide', 'moon');
+                themeTextMobile.textContent = "Switch to Day Mode";
+            } else {
+                topBar.classList.replace('bg-black', 'bg-[#002366]');
+                middleBanner.style.backgroundImage = "url('banner-day.png')";
+                middleBanner.classList.replace('bg-night-fallback', 'bg-day-fallback');
+                bottomNav.classList.replace('bg-black', 'bg-[#002366]');
+                bottomNavMobile.classList.replace('bg-black', 'bg-[#001446]');
+                themeIcon.setAttribute('data-lucide', 'sun');
+                themeIconMobile.setAttribute('data-lucide', 'sun');
+                themeTextMobile.textContent = "Switch to Night Mode";
+            }
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            isNightMode = !isNightMode;
+            localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
+            applyThemeStyles();
+        }
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        // Load saved theme from localStorage
+        const savedTheme = localStorage.getItem('themeMode') || 'day';
+        isNightMode = savedTheme === 'night';
+        applyThemeStyles();
+
+        // --- USER SPECIFIC LOGIC ---
+        document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+
+        // DES Encryption Simulation with Shared State
+        function applyEncryption(isEncrypting) {
+            const cells = document.querySelectorAll('.data-cell');
+            cells.forEach(cell => {
+                if (isEncrypting) {
+                    // Encrypt: Convert characters to hex and pad (DES-like format)
+                    const originalValue = cell.getAttribute('data-val');
+                    const encryptedValue = Array.from(originalValue)
+                        .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
+                        .join('')
+                        .padEnd(32, '0');
+                    cell.innerText = encryptedValue;
+                    cell.classList.add('encrypted');
+                } else {
+                    // Decrypt: Restore original value
+                    cell.innerText = cell.getAttribute('data-val');
+                    cell.classList.remove('encrypted');
+                }
+            });
+        }
+
+        function toggleEncryption(isEncrypting) {
+            // Store encryption state in localStorage to sync with guard page
+            localStorage.setItem('isDataEncrypted', isEncrypting.toString());
+            
+            // Apply encryption to all data cells on current page
+            applyEncryption(isEncrypting);
+
+            // Broadcast to guard page via storage event
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'isDataEncrypted',
+                newValue: isEncrypting.toString(),
+                oldValue: (!isEncrypting).toString()
+            }));
+        }
+
+        // Listen for encryption state changes from guard page
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'isDataEncrypted') {
+                const isEncrypted = event.newValue === 'true';
+                applyEncryption(isEncrypted);
+            }
+        });
+
+        // Pricing Table Logic with Backend Integration
+        let editingRateId = null;
+
+        // Open pricing modal
+        function openPricingModal() {
+            editingRateId = null;
+            document.getElementById('pricing-form').reset();
+            document.querySelector('#pricing-modal h3').textContent = 'Add New Pricing Tier';
+            document.getElementById('pricing-modal').classList.remove('hidden');
+        }
+
+        // Close pricing modal
+        function closePricingModal() {
+            document.getElementById('pricing-modal').classList.add('hidden');
+            editingRateId = null;
+        }
+
+        // Handle pricing form submission
+        document.getElementById('pricing-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const passType = document.getElementById('modal-pass-type').value;
+            const vehicleType = document.getElementById('modal-vehicle-type').value;
+            const price = parseFloat(document.getElementById('modal-price').value);
+
+            if (!passType || !vehicleType || isNaN(price) || price < 0) {
+                alert('Please fill in all fields with valid values.\n\nPrice must be a number >= 0');
+                return;
+            }
+
+            // Ensure price is positive
+            if (price <= 0) {
+                alert('Price must be greater than 0');
+                return;
+            }
+
+            try {
+                console.log('📝 Submitting pricing tier:', { passType, vehicleType, price });
+                let res;
+                if (editingRateId) {
+                    // Update existing rate
+                    console.log('🔄 Updating rate ID:', editingRateId);
+                    res = await fetch(`${API_BASE_URL}/parking-rates/${editingRateId}/`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pass_type: passType,
+                            vehicle_type: vehicleType,
+                            price: price.toFixed(2)
+                        })
+                    });
+                } else {
+                    // Create new rate
+                    console.log('✚ Creating new rate');
+                    res = await fetch(`${API_BASE_URL}/parking-rates/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pass_type: passType,
+                            vehicle_type: vehicleType,
+                            price: price.toFixed(2),
+                            is_active: true
+                        })
+                    });
+                }
+
+                console.log('📊 Response status:', res.status);
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+                    console.error('❌ Backend error:', errorData);
+                    
+                    // Check for common error messages
+                    if (errorData.non_field_errors) {
+                        throw new Error(`${errorData.non_field_errors.join(', ')}`);
+                    } else if (errorData.vehicle_type || errorData.pass_type || errorData.price) {
+                        const errors = Object.values(errorData).flat().join(', ');
+                        throw new Error(`Validation error: ${errors}`);
+                    } else {
+                        throw new Error('Failed to save pricing tier');
+                    }
+                }
+
+                console.log('✅ Pricing tier saved successfully!');
+                closePricingModal();
+                loadData();
+                alert('✓ Pricing tier saved successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`✗ Error: ${error.message}`);
+            }
+        });
+
+        // Cancel button in modal
+        document.getElementById('modal-cancel-btn').addEventListener('click', closePricingModal);
+
+        // Add pricing button
+        document.getElementById('add-pricing-btn').addEventListener('click', openPricingModal);
+
+        // Edit pricing tier
+        function editPricingTier(btn) {
+            const row = btn.closest('tr');
+            const rateId = row.getAttribute('data-rate-id');
+            const passType = row.cells[0].innerText.toLowerCase();
+            const vehicleType = row.cells[1].innerText.toLowerCase();
+            const price = parseFloat(row.cells[2].innerText);
+
+            editingRateId = rateId;
+            document.getElementById('modal-pass-type').value = passType;
+            document.getElementById('modal-vehicle-type').value = vehicleType;
+            document.getElementById('modal-price').value = price;
+            document.querySelector('#pricing-modal h3').textContent = 'Edit Pricing Tier';
+            document.getElementById('pricing-modal').classList.remove('hidden');
+        }
+
+        // Delete pricing tier
+        async function deletePricingTier(btn) {
+            if (!confirm('Are you sure you want to delete this pricing tier?')) return;
+
+            const row = btn.closest('tr');
+            const rateId = row.getAttribute('data-rate-id');
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/parking-rates/${rateId}/`, {
+                    method: 'DELETE'
+                });
+
+                if (!res.ok) throw new Error('Failed to delete pricing tier');
+
+                loadData();
+                alert('✓ Pricing tier deleted successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+
+        function editRow(btn) {
+            const row = btn.closest('tr');
+            const inputs = row.querySelectorAll('input');
+            const rateId = row.getAttribute('data-rate-id');
+            
+            if (btn.innerText === "Edit") {
+                // Enable editing
+                inputs.forEach(inp => { 
+                    inp.disabled = false; 
+                    inp.classList.add('border-b', 'border-blue-300'); 
+                });
+                btn.innerText = "Save";
+                btn.classList.replace('bg-blue-100', 'bg-green-100');
+                btn.classList.replace('text-blue-700', 'text-green-700');
+            } else {
+                // Save changes to backend
+                const priceInput = inputs[2];
+                const newPrice = parseFloat(priceInput.value);
+                
+                if (isNaN(newPrice) || newPrice < 0) {
+                    alert("Please enter a valid price.");
+                    return;
+                }
+                
+                // Send PATCH request to backend
+                fetch(`${API_BASE_URL}/parking-rates/${rateId}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        price: newPrice.toFixed(2)
+                    })
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to update price');
+                    return res.json();
+                })
+                .then(data => {
+                    // Disable editing
+                    inputs.forEach(inp => { 
+                        inp.disabled = true; 
+                        inp.classList.remove('border-b', 'border-blue-300'); 
+                    });
+                    btn.innerText = "Edit";
+                    btn.classList.replace('bg-green-100', 'bg-blue-100');
+                    btn.classList.replace('text-green-700', 'text-blue-700');
+                    alert("Changes saved to database successfully!");
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Failed to save changes. Please try again.");
+                });
+            }
+        }
+
+        async function deleteRow(btn) {
+            if (confirm("Are you sure you want to delete this pricing tier?")) {
+                const row = btn.closest('tr');
+                const rateId = row.getAttribute('data-rate-id');
+                
+                try {
+                    const res = await fetch(`${API_BASE_URL}/parking-rates/${rateId}/`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (!res.ok) throw new Error('Failed to delete pricing tier');
+                    
+                    // Remove row from table
+                    row.remove();
+                    alert("Pricing tier deleted successfully!");
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert("Failed to delete pricing tier. Please try again.");
+                }
+            }
+        }
+
+        function addRow() {
+            openPricingModal();
+        }
+
+        // Scroll Reveal Initialization
+        document.addEventListener("DOMContentLoaded", () => {
+            // Load data from backend
+            loadData();
+            loadAllVehicles();  // Load vehicles on page load
+            
+            // Check if data should be encrypted on page load
+            if (localStorage.getItem('isDataEncrypted') === 'true') {
+                setTimeout(() => applyEncryption(true), 500);
+            }
+            
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        setTimeout(() => { el.classList.add('is-visible'); }, parseInt(el.getAttribute('data-delay')) || 0);
+                        obs.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.15 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        });
+
+        // --- FOOTER LOGIC (Animations) ---
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 40; i++) {
+            let star = document.createElement('div');
+            star.classList.add('star');
+            let size = Math.random() * 2;
+            star.style.width = `${size}px`; star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`; star.style.top = `${Math.random() * 120}px`;
+            star.style.setProperty('--star-opacity', Math.random() * 0.8 + 0.1);
+            starsContainer.appendChild(star);
+        }
+
+        const cityscape = document.getElementById('cityscape');
+        const numBuildings = Math.floor(window.innerWidth / 30); 
+        for (let i = 0; i < numBuildings; i++) {
+            let building = document.createElement('div'); building.classList.add('building');
+            let width = Math.random() * 35 + 25; let height = Math.random() * 70 + 20; 
+            building.style.width = `${width}px`; building.style.height = `${height}px`;
+            const windowSize = 4; const gap = 4; const padding = 5; 
+            const cols = Math.floor((width - (padding * 2) + gap) / (windowSize + gap));
+            const rows = Math.floor((height - (padding * 2) + gap) / (windowSize + gap));
+            for (let r = 0; r < rows; r++) { 
+                for (let c = 0; c < cols; c++) {
+                    if (Math.random() > 0.65) {
+                        let win = document.createElement('div'); win.classList.add('window');
+                        win.style.width = `${windowSize}px`; win.style.height = `${windowSize}px`;
+                        win.style.left = `${padding + c * (windowSize + gap)}px`; win.style.top = `${padding + r * (windowSize + gap)}px`;
+                        building.appendChild(win);
+                    }
+                }
+            }
+            cityscape.appendChild(building);
+        }
+
+        const cloudsContainer = document.getElementById('clouds-container');
+        const clouds = [];
+        for (let i = 0; i < 4; i++) {
+            let cloud = document.createElement('div'); cloud.classList.add('cloud');
+            let width = Math.random() * 50 + 70; let height = width / 3;
+            let top = Math.random() * 40 + 5; let speed = Math.random() * 0.3 + 0.1;
+            let xPos = Math.random() * window.innerWidth;
+            cloud.style.width = `${width}px`; cloud.style.height = `${height}px`; cloud.style.top = `${top}px`;
+            cloudsContainer.appendChild(cloud);
+            clouds.push({ element: cloud, x: xPos, speed: speed });
+        }
+
+        const carsContainer = document.getElementById('cars-container');
+        const cars = [];
+        for (let i = 0; i < 3; i++) { 
+            let car = document.createElement('div'); car.classList.add('car');
+            let speed = Math.random() * 1.5 + 1.2; let xPos = Math.random() * window.innerWidth;
+            carsContainer.appendChild(car);
+            cars.push({ element: car, x: xPos, speed: speed });
+        }
+
+        function animateFooter() {
+            clouds.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 150) { c.x = -150; c.element.style.top = `${Math.random() * 40 + 5}px`; }
+                c.element.style.left = `${c.x}px`;
+            });
+            cars.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 60) { c.x = -60; } 
+                c.element.style.left = `${c.x}px`;
+            });
+            requestAnimationFrame(animateFooter);
+        }
+        animateFooter();
+    </script>
+</body>
+</html>

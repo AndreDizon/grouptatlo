@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Logs - UA Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- GLOBAL & BODY STYLES --- */
+        body {
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+        }
+        body.night-mode {
+            background-color: #0d1117;
+        }
+
+        .layout-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* --- HEADER STYLES --- */
+        #middle-banner {
+            transition: background-image 0.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .bg-day-fallback { background-color: #87CEEB; }
+        .bg-night-fallback { background-color: #0f172a; }
+
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            display: block; margin-top: 5px; right: 0; background: #FFD700;
+            transition: width 0.3s ease; -webkit-transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; left: 0; background: #FFD700; }
+        .nav-link:hover { color: #FFD700; }
+
+        /* --- SCROLL REVEAL ANIMATIONS --- */
+        .reveal { opacity: 0; transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.up { transform: translateY(40px); }
+        .reveal.is-visible { opacity: 1; transform: none !important; }
+
+        /* --- NIGHT MODE OVERRIDES --- */
+        body.night-mode .bg-white {
+            background-color: #1a2235 !important;
+            border-color: #2a3752 !important;
+        }
+        body.night-mode h1, body.night-mode .text-\[\#002366\] { color: #e2e8f0 !important; border-color: #2a3752 !important; }
+        body.night-mode label, body.night-mode p { color: #8fa0b5 !important; }
+        body.night-mode .text-gray-900, body.night-mode .text-gray-700 { color: #e2e8f0 !important; }
+        body.night-mode .text-gray-50 { color: #111827 !important; opacity: 0.8 !important;}
+        
+        body.night-mode input, body.night-mode select, body.night-mode textarea {
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            border-color: #2a3752 !important;
+            color: #e2e8f0 !important;
+        }
+        body.night-mode input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
+        body.night-mode .border-gray-100, body.night-mode .border-gray-200, body.night-mode .border-gray-300 { border-color: #2a3752 !important; }
+        
+        /* Table Specific Night Mode Overrides */
+        body.night-mode .bg-gray-50 { background-color: #111827 !important; }
+        body.night-mode .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #2a3752 !important; }
+        body.night-mode th { background-color: #0d1117 !important; color: #8fa0b5 !important; }
+        body.night-mode td { color: #cbd5e1 !important; }
+        body.night-mode tr.hover\:bg-gray-50:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
+        body.night-mode button.border-gray-300:hover { background-color: #2a3752 !important; color: #fff; }
+
+        /* --- FOOTER STYLES --- */
+        .animated-footer {
+            position: relative; margin-top: auto; height: 180px; width: 100%;
+            background: linear-gradient(to bottom, #d4f0ff 0%, #e6f7ff 100%);
+            overflow: hidden; border-top: 2px solid #bce6ff;
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        .animated-footer.night-mode {
+            background: linear-gradient(to bottom, #0a1020 0%, #17243b 100%);
+            border-top: 2px solid #283752;
+        }
+        .celestial-body {
+            position: absolute; top: 15px; right: 10%; width: 50px; height: 50px;
+            background-color: rgba(255, 235, 59, 0.8); border-radius: 50%;
+            box-shadow: 0 0 30px 15px rgba(255, 235, 59, 0.4); z-index: 1; transition: all 0.5s ease;
+        }
+        .animated-footer.night-mode .celestial-body {
+            width: 45px; height: 45px; background-color: #fcf9e3;
+            box-shadow: 0 0 25px 10px rgba(252, 249, 227, 0.2);
+        }
+        .star { position: absolute; background-color: white; border-radius: 50%; z-index: 0; opacity: 0; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .star { opacity: var(--star-opacity); }
+        .cloud, .cloud::before, .cloud::after { background: white; transition: background 0.5s ease; }
+        .cloud { position: absolute; border-radius: 50px; z-index: 2; opacity: 0.9; }
+        .cloud::before, .cloud::after { content: ''; position: absolute; border-radius: 50%; }
+        .cloud::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+        .cloud::after { width: 40px; height: 40px; top: -15px; right: 15px; }
+        .animated-footer.night-mode .cloud, .animated-footer.night-mode .cloud::before, .animated-footer.night-mode .cloud::after { background: rgba(255, 255, 255, 0.05); }
+        .cityscape { position: absolute; bottom: 40px; width: 100%; height: 90px; display: flex; align-items: flex-end; z-index: 3; }
+        .building { background-color: rgba(160, 220, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.4); border-bottom: none; box-sizing: border-box; position: relative; overflow: hidden; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .building { background-color: rgba(15, 22, 35, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); border-bottom: none; }
+        .window { position: absolute; background-color: rgba(255, 255, 255, 0.85); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .window { background-color: rgba(255, 240, 150, 0.85); box-shadow: 0 0 3px rgba(255, 240, 150, 0.5); }
+        .road { position: absolute; bottom: 0; width: 100%; height: 40px; background-color: #e0e0e0; border-top: 2px solid #ccc; z-index: 4; display: flex; align-items: center; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .road { background-color: #1e2430; border-top: 2px solid #11151c; }
+        .road-line { width: 100%; height: 2px; background-image: linear-gradient(90deg, #fff 50%, transparent 50%); background-size: 30px 2px; opacity: 0.5; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .road-line { opacity: 0.15; }
+        .car { position: absolute; bottom: 12px; width: 45px; height: 16px; background-color: #ffffff; border-radius: 8px; z-index: 5; box-shadow: 2px 2px 4px rgba(0,0,0,0.15); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .car { background-color: #8c97a6; box-shadow: 15px 0 10px -3px rgba(255, 255, 200, 0.5); }
+        .footer-content { position: absolute; bottom: 40px; width: 100%; padding: 0 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10; pointer-events: none; }
+        .footer-left { color: #00265e; transition: color 0.5s ease; }
+        .footer-left h3 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; text-transform: uppercase; transition: text-shadow 0.5s ease;}
+        .footer-left p { margin: 3px 0 12px 0; font-size: 0.85rem; color: #555; transition: color 0.5s ease;}
+        .animated-footer.night-mode .footer-left { color: #dbe4f0; }
+        .animated-footer.night-mode .footer-left h3 { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-left p { color: #8fa0b5; }
+        .footer-right { margin-bottom: 12px; pointer-events: auto; }
+        .footer-right a { color: #00265e; text-decoration: none; margin-left: 20px; font-size: 0.85rem; font-weight: 600; transition: color 0.5s ease, text-shadow 0.5s ease; }
+        .footer-right a:hover { text-decoration: underline; }
+        .animated-footer.night-mode .footer-right a { color: #dbe4f0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-right a:hover { color: #ffffff; }
+        .footer-bottom { position: absolute; bottom: 12px; width: 100%; text-align: center; z-index: 10; font-size: 0.75rem; color: #777; letter-spacing: 1px; transition: color 0.5s ease; }
+        .animated-footer.night-mode .footer-bottom { color: #5d6d85; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <header class="w-full shadow-lg relative z-40 flex flex-col">
+        <div id="top-bar" class="bg-[#002366] px-4 md:px-8 py-3 flex flex-col md:flex-row items-center justify-between shadow-sm z-20 gap-3 md:gap-0 transition-colors duration-300 border-b border-white/10">
+            <div class="flex items-center gap-3 w-full md:w-1/3 justify-center md:justify-start">
+                <img src="logo.png" alt="UA Logo" class="w-10 h-10 object-contain bg-white rounded-full p-0.5">
+                <span id="brand-text" class="font-extrabold text-xl text-white tracking-wide transition-colors duration-300">UA Parking System</span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center text-center">
+                <span id="welcome-text" class="text-white/80 font-semibold text-sm md:text-base transition-colors duration-300"><span id="guard-name-header" class="text-[#FFD700] font-bold">Loading...</span></span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center md:justify-end">
+                <span id="dashboard-title" class="bg-[#FFD700] text-[#002366] px-4 py-1.5 rounded-full text-xs md:text-sm font-bold tracking-wider shadow-sm uppercase transition-colors duration-300">GUARD DASHBOARD</span>
+            </div>
+        </div>
+
+        <div id="middle-banner" class="h-64 md:h-80 w-full bg-day-fallback relative shadow-inner" style="background-image: url('banner-day.png');">
+            <div class="absolute inset-0 bg-black/10"></div>
+        </div>
+
+        <div id="bottom-nav" class="bg-[#002366] text-white relative shadow-md z-20 border-t border-white/10 transition-colors duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-center md:justify-between">
+                <div class="hidden md:block w-10"></div>
+                <nav id="nav-links-container" class="flex items-center justify-center gap-4 md:gap-8 overflow-x-auto whitespace-nowrap px-2 no-scrollbar font-medium text-sm md:text-base w-full md:w-auto">
+                    <a href="guard-home-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Home</a>
+                    <a href="guard-statistics-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Statistics</a>
+                    <a href="guard-vehicle-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Vehicle</a>
+                    <a href="guard-scanqrcode-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Scan QR code</a>
+                    <a href="guard-contact&information-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Contact & Information</a>
+                    <a href="guard-profile-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Profile</a>
+                </nav>
+                <div class="hidden md:flex items-center justify-end w-10">
+                    <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none text-[#FFD700]" title="Toggle Day/Night Mode">
+                        <i id="theme-icon" data-lucide="sun" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="bottom-nav-mobile" class="md:hidden bg-[#001446] py-2 flex justify-center border-t border-white/10 transition-colors duration-300">
+            <button id="theme-toggle-btn-mobile" class="flex items-center gap-2 text-sm text-[#FFD700] hover:text-white transition-colors">
+                <i id="theme-icon-mobile" data-lucide="sun" class="w-4 h-4"></i>
+                <span id="theme-text-mobile">Switch to Night Mode</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <div class="reveal up flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-delay="0">
+            <div>
+                <h1 class="text-2xl font-bold text-[#002366] transition-colors duration-300">Shared Vehicle Logs</h1>
+                <p class="text-gray-500 text-sm mt-1 transition-colors duration-300">Campus-wide time-in and time-out records.</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-300 shadow-sm transition-colors duration-300">
+                    <label for="log-date" class="font-semibold text-gray-600 text-sm transition-colors duration-300">Select Date:</label>
+                    <input type="date" id="log-date" class="outline-none text-[#002366] font-bold bg-transparent text-sm transition-colors duration-300">
+                </div>
+            </div>
+        </div>
+
+        <div class="reveal up bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-colors duration-300" data-delay="150">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-700 whitespace-nowrap transition-colors duration-300">
+                    <thead class="bg-[#002366] text-white transition-colors duration-300">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold">Date</th>
+                            <th class="px-6 py-4 font-semibold">Driver Name</th>
+                            <th class="px-6 py-4 font-semibold">Vehicle Type</th>
+                            <th class="px-6 py-4 font-semibold">Plate Number</th>
+                            <th class="px-6 py-4 font-semibold">Time-In</th>
+                            <th class="px-6 py-4 font-semibold">Time-Out</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 transition-colors duration-300" id="vehicle-logs-tbody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center text-sm text-gray-500 transition-colors duration-300">
+                <span class="transition-colors duration-300">Showing logs for the selected date.</span>
+                <div class="flex gap-2">
+                    <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition-colors duration-300">&lt; Prev</button>
+                    <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition-colors duration-300">Next &gt;</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="animated-footer" id="animatedFooter">
+        <div id="stars-container"></div>
+        <div class="celestial-body" id="celestial-body"></div>
+        <div id="clouds-container"></div>
+        <div class="cityscape" id="cityscape"></div>
+        <div class="footer-content">
+            <div class="footer-left">
+                <h3>UA PARKING</h3>
+                <p>Campus Vehicle Management System</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Help & Support</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+        <div id="cars-container"></div>
+        <div class="road">
+            <div class="road-line"></div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 UNIVERSITY OF THE ASSUMPTION.
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000/api';
+
+        // Load data from backend
+        async function loadData() {
+            const userRole = localStorage.getItem('userRole') || 'Guard';
+            const currentUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
+            const roleCapitalized = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+            document.getElementById('guard-name-header').textContent = `Welcome ${roleCapitalized}, ${currentUser}`;
+
+            try {
+                // Fetch parking sessions
+                const sessionsRes = await fetch(`${API_BASE_URL}/parking-sessions/`);
+
+                if (!sessionsRes.ok) {
+                    throw new Error('API error');
+                }
+
+                const sessionsData = await sessionsRes.json();
+                const sessions = Array.isArray(sessionsData) ? sessionsData : (sessionsData.results || []);
+                loadVehicleLogs(sessions);
+
+            } catch (error) {
+                console.warn('Backend unavailable, using fallback:', error);
+                loadVehicleLogsLocal();
+            }
+        }
+
+        function loadVehicleLogs(sessions) {
+            const tbody = document.getElementById('vehicle-logs-tbody');
+            tbody.innerHTML = '';
+
+            sessions.forEach(session => {
+                const vehicleInfo = session.vehicle_info || {};
+                const date = new Date(session.time_in).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                const timeIn = new Date(session.time_in).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                const timeOut = session.time_out ? new Date(session.time_out).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'null';
+                const driverName = session.vehicle_info?.owner_name || 'Unknown';
+                const vehicleType = vehicleInfo.vehicle_type ? vehicleInfo.vehicle_type.charAt(0).toUpperCase() + vehicleInfo.vehicle_type.slice(1) : 'Unknown';
+                const plateNumber = vehicleInfo.plate_number || 'N/A';
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                row.setAttribute('data-session-id', session.id);
+                row.innerHTML = `
+                    <td class="px-6 py-4 data-cell" data-val="${date}">${date}</td>
+                    <td class="px-6 py-4 font-medium data-cell" data-val="${driverName}">${driverName}</td>
+                    <td class="px-6 py-4 data-cell" data-val="${vehicleType}">${vehicleType}</td>
+                    <td class="px-6 py-4 font-bold text-[#002366] data-cell transition-colors duration-300" data-val="${plateNumber}">${plateNumber}</td>
+                    <td class="px-6 py-4 text-green-600 font-semibold data-cell" data-val="${timeIn}">${timeIn}</td>
+                    <td class="px-6 py-4 ${timeOut !== 'null' ? 'text-blue-600' : 'text-gray-400 italic'} font-semibold data-cell" data-val="${timeOut}">${timeOut}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Apply encryption state if it's currently encrypted
+            if (localStorage.getItem('isDataEncrypted') === 'true') {
+                applyEncryption(true);
+            }
+        }
+
+        function loadVehicleLogsLocal() {
+            const tbody = document.getElementById('vehicle-logs-tbody');
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No vehicle logs available</td></tr>';
+        }
+
+        // --- SHARED ENCRYPTION/DECRYPTION LOGIC ---
+        // Apply encryption to all data cells using DES hex encoding
+        function applyEncryption(isEncrypting) {
+            const cells = document.querySelectorAll('.data-cell');
+            cells.forEach(cell => {
+                if (isEncrypting) {
+                    // Encrypt: Convert characters to hex and pad
+                    const originalValue = cell.getAttribute('data-val');
+                    const encryptedValue = Array.from(originalValue)
+                        .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
+                        .join('')
+                        .padEnd(32, '0');
+                    cell.innerText = encryptedValue;
+                    cell.classList.add('encrypted');
+                } else {
+                    // Decrypt: Restore original value
+                    cell.innerText = cell.getAttribute('data-val');
+                    cell.classList.remove('encrypted');
+                }
+            });
+        }
+
+        // Toggle encryption and sync across pages
+        function toggleEncryption(isEncrypting) {
+            // Store encryption state in localStorage to sync with admin page
+            localStorage.setItem('isDataEncrypted', isEncrypting.toString());
+            
+            // Apply encryption to all data cells on current page
+            applyEncryption(isEncrypting);
+
+            // Broadcast to admin page via storage event
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'isDataEncrypted',
+                newValue: isEncrypting.toString(),
+                oldValue: (!isEncrypting).toString()
+            }));
+        }
+
+        // Listen for encryption state changes from admin page
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'isDataEncrypted') {
+                const isEncrypted = event.newValue === 'true';
+                applyEncryption(isEncrypted);
+            }
+        });
+
+        // --- HARDCODED DAY/NIGHT LOGIC ---
+        let isNightMode = false;
+        const topBar = document.getElementById('top-bar');
+        const bottomNav = document.getElementById('bottom-nav');
+        const bottomNavMobile = document.getElementById('bottom-nav-mobile');
+        const middleBanner = document.getElementById('middle-banner');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeToggleBtnMobile = document.getElementById('theme-toggle-btn-mobile');
+        const themeIconMobile = document.getElementById('theme-icon-mobile');
+        const themeTextMobile = document.getElementById('theme-text-mobile');
+        const footer = document.getElementById('animatedFooter');
+
+        function applyThemeStyles() {
+            document.body.classList.toggle('night-mode', isNightMode);
+            footer.classList.toggle('night-mode', isNightMode);
+
+            if (isNightMode) {
+                topBar.classList.replace('bg-[#002366]', 'bg-black');
+                middleBanner.style.backgroundImage = "url('banner-night.png')";
+                middleBanner.classList.replace('bg-day-fallback', 'bg-night-fallback');
+                bottomNav.classList.replace('bg-[#002366]', 'bg-black');
+                bottomNavMobile.classList.replace('bg-[#001446]', 'bg-black');
+                themeIcon.setAttribute('data-lucide', 'moon');
+                themeIconMobile.setAttribute('data-lucide', 'moon');
+                themeTextMobile.textContent = "Switch to Day Mode";
+            } else {
+                topBar.classList.replace('bg-black', 'bg-[#002366]');
+                middleBanner.style.backgroundImage = "url('banner-day.png')";
+                middleBanner.classList.replace('bg-night-fallback', 'bg-day-fallback');
+                bottomNav.classList.replace('bg-black', 'bg-[#002366]');
+                bottomNavMobile.classList.replace('bg-black', 'bg-[#001446]');
+                themeIcon.setAttribute('data-lucide', 'sun');
+                themeIconMobile.setAttribute('data-lucide', 'sun');
+                themeTextMobile.textContent = "Switch to Night Mode";
+            }
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            isNightMode = !isNightMode;
+            localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
+            applyThemeStyles();
+        }
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        // Load saved theme from localStorage
+        const savedTheme = localStorage.getItem('themeMode') || 'day';
+        isNightMode = savedTheme === 'night';
+        applyThemeStyles();
+
+        // --- Set date picker to today's date by default & Scroll Reveal ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load data from backend
+            loadData();
+            
+            // Check if data should be encrypted on page load
+            if (localStorage.getItem('isDataEncrypted') === 'true') {
+                setTimeout(() => applyEncryption(true), 500);
+            }
+            
+            const dateInput = document.getElementById('log-date');
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        setTimeout(() => { el.classList.add('is-visible'); }, parseInt(el.getAttribute('data-delay')) || 0);
+                        obs.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.15 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        });
+
+        // --- FOOTER LOGIC (Animations) ---
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 40; i++) {
+            let star = document.createElement('div');
+            star.classList.add('star');
+            let size = Math.random() * 2;
+            star.style.width = `${size}px`; star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`; star.style.top = `${Math.random() * 120}px`;
+            star.style.setProperty('--star-opacity', Math.random() * 0.8 + 0.1);
+            starsContainer.appendChild(star);
+        }
+
+        const cityscape = document.getElementById('cityscape');
+        const numBuildings = Math.floor(window.innerWidth / 30); 
+        for (let i = 0; i < numBuildings; i++) {
+            let building = document.createElement('div'); building.classList.add('building');
+            let width = Math.random() * 35 + 25; let height = Math.random() * 70 + 20; 
+            building.style.width = `${width}px`; building.style.height = `${height}px`;
+            const windowSize = 4; const gap = 4; const padding = 5; 
+            const cols = Math.floor((width - (padding * 2) + gap) / (windowSize + gap));
+            const rows = Math.floor((height - (padding * 2) + gap) / (windowSize + gap));
+            for (let r = 0; r < rows; r++) { 
+                for (let c = 0; c < cols; c++) {
+                    if (Math.random() > 0.65) {
+                        let win = document.createElement('div'); win.classList.add('window');
+                        win.style.width = `${windowSize}px`; win.style.height = `${windowSize}px`;
+                        win.style.left = `${padding + c * (windowSize + gap)}px`; win.style.top = `${padding + r * (windowSize + gap)}px`;
+                        building.appendChild(win);
+                    }
+                }
+            }
+            cityscape.appendChild(building);
+        }
+
+        const cloudsContainer = document.getElementById('clouds-container');
+        const clouds = [];
+        for (let i = 0; i < 4; i++) {
+            let cloud = document.createElement('div'); cloud.classList.add('cloud');
+            let width = Math.random() * 50 + 70; let height = width / 3;
+            let top = Math.random() * 40 + 5; let speed = Math.random() * 0.3 + 0.1;
+            let xPos = Math.random() * window.innerWidth;
+            cloud.style.width = `${width}px`; cloud.style.height = `${height}px`; cloud.style.top = `${top}px`;
+            cloudsContainer.appendChild(cloud);
+            clouds.push({ element: cloud, x: xPos, speed: speed });
+        }
+
+        const carsContainer = document.getElementById('cars-container');
+        const cars = [];
+        for (let i = 0; i < 3; i++) { 
+            let car = document.createElement('div'); car.classList.add('car');
+            let speed = Math.random() * 1.5 + 1.2; let xPos = Math.random() * window.innerWidth;
+            carsContainer.appendChild(car);
+            cars.push({ element: car, x: xPos, speed: speed });
+        }
+
+        function animateFooter() {
+            clouds.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 150) { c.x = -150; c.element.style.top = `${Math.random() * 40 + 5}px`; }
+                c.element.style.left = `${c.x}px`;
+            });
+            cars.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 60) { c.x = -60; } 
+                c.element.style.left = `${c.x}px`;
+            });
+            requestAnimationFrame(animateFooter);
+        }
+        animateFooter();
+    </script>
+</body>
+</html>

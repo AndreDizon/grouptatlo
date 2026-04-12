@@ -1,0 +1,346 @@
+﻿tech stack and further instructions
+TECH STACK & Instructions
+
+
+Goal: make a working system
+
+
+Frontend: 
+Javascript, html, css, 
+
+
+Backend:
+Django
+
+
+Database: PostgreSQL
+Create database for users, vehicles, scan logs
+
+
+Roles:
+Admin
+Driver 
+Guard
+
+
+For QR scanning find a way for it to work
+
+
+Note: add back button in areas that need a back button
+Note: after login always go to homepage of driver/guard/admin
+login & signup pages
+
+
+
+
+1. Loading-page.html - THIS IS THE FIRST PAGE after the loading-page.html finishes animation finish redirect to login page
+
+
+2. Login page (login.html)
+
+
+Welcome to UA Parking System
+Log in to continue.
+
+
+* Input Username 
+* Input Password
+* Login button (skip register and setup profile page, proceeds to driver home page or, guard home page or admin home page based on account)
+* Don't have an account? Click here to register (redirects to register page)
+
+
+(Note If an account is a guard or admin account, proceed to guard or admin ui/homepage based on account permission or role (skip register page and setup profile page )(admin account will be: username: admin1, password: admin1 (this is the root account)))
+
+
+3. Register page (register.html)
+
+
+   Register to continue.
+
+
+* Input Username 
+* Input Password
+* Register button (redirects to setup profile page)
+* Already have an account? Click here to login (redirects to login page)
+
+
+
+
+4. Setup profile page (setup-profile.html)
+
+
+     Finish setting up your profile to continue.
+
+
+* Input Driver name
+* Select role (options: student, faculty, fetcher)
+* Input contact number 
+* Input Email
+* Input Address
+* Set up profile button (finishes account creation and redirects to driver role ui)
+
+
+
+
+
+
+
+
+driver role pages
+(DRIVER ROLE UI)
+
+
+(Driver Header)
+Header: 
+* Section1 of header top displays: top left: logo then beside it is “UA Parking System” text, center top: Welcome Driver, “display username here”, top right side: text “Driver Dashboard”
+* Section2 of header middle displays: banner (use banner-day.png or banner-night.png, it changes based on day/ night mode)
+* Section3 of header bottom displays: Navigation bar botton: Home, Parking, Vehicle, Contact & Information, Profile, sun/moon toggle icon for day/night mode (navigation bar leads to the intended pages)
+
+
+(body)
+1. Home page displays (driver-home-page.html)
+
+
+* Mission & Vision
+* Core Values
+* Our Journey
+* Description of UA Park System
+
+
+2. Parking page displays (driver-parking-page.html)
+
+
+* University of the Assumption Parking statistics display: total vehicles registered, currently parked, peak parking hours, available slots (300+ - total parked vehicles= available slots) (view options filter: day, week, month, year)
+
+
+* Personal parking statistics display:Total Parking Sessions, Total Hours Parked, Vehicle Count, Average Duration (view options filter: day, week, month, year)
+
+
+* display Time in and time out for today (resets daily)
+
+
+
+
+3. Vehicle page displays (driver-vehicle-page.html)
+
+
+* View my registered vehicle/s button (when pressed displays all registered vehicles of the driver, example: vehicle 1, vehicle 2 (vehicle name is renamable by driver)
+
+
+(Note: when a vehicle name is pressed it will show all details/ data of vehicle like: driver name, vehicle type, Park or Drop-off, vehicle brand, plate number, unique vehicle generated QR (do not release QR code yet it sould be blurred first and has a note: “To generate QR and sticker pay for registration fee in finance office then give receipt to admin for approval, then admin will generate QR code and sticker”. (because driver needs to pay first before qr is generated)(this will also be a QR sticker for the vehicles(below the QR is a text “UA” then the school year example: “UA 2026-27” this changes based on the year))
+
+
+
+
+* register new vehicle button
+* Select vehicle type: option1 (motorcycle/e-bikes/bikes/tricycle/etc.), option2 (car/van/jeepney/pick-up truck/etc.)
+* Select type: Park or Drop-off
+* Input vehicle brand
+* Input plate number 
+* Register Vehicle button
+
+
+* Vehicle registration prices table displays (this should be in table format)(this table could be edited by the admin)
+
+
+* Drop-Off = Vehicle type: motorcycle/e-bikes/bikes/tricycle/etc. = Price: 250 php
+* Drop-Off = Vehicle type: car/van/jeepney/pick-up truck/etc. = Price: 500 php
+* Park = Vehicle type: motorcycle/e-bikes/bikes/tricycle/etc. = Price: 500 php
+* Park = Vehicle type: car/van/jeepney/pick-up truck/etc. = Price: 1000 php
+
+
+
+
+
+
+4. contact & information page displays (driver-contact&information-page.html)
+* Advisory Entry & Parking
+* General Policy on Parking Lot Use
+* Contact & Socials
+* Physical Address
+
+
+
+
+
+
+5. profile page displays (driver-profile-page.html)
+
+
+* Display driver’s name
+* Display driver’s role ((editable by account holder)options: student, faculty, fetcher)
+* Display driver’s contact number (editable by account holder)
+* Display driver’s Email (editable by account holder)
+* Display driver’s Address (editable by account holder)
+
+
+* logout button (logs out the account and then redirects to the login page)
+
+
+(footer)
+
+
+
+
+
+
+guard role pages
+(GUARD ROLE UI)
+
+
+(Universal header)
+* Section1 of header top displays: top left: logo then beside it is “UA Parking System” text, center top: Welcome Guard, “display username here”, top right side: text “Guard Dashboard”
+* Section2 of header middle displays: banner (use banner-day.png or banner-night.png, it changes based on day/ night mode)
+* Section3 of header bottom displays: Navigation bar buttons: Home, Statistics, Vehicle, Scan QR code, Contact & Information, Profile, sun/moon toggle icon for day/night mode (navigation bar leads to the intended pages)
+
+
+
+
+(body)
+1. Home page displays (driver-home-page.html)
+
+
+* Mission & Vision
+* Core Values
+* Our Journey
+* Description of UA Park System
+
+
+2.  statistics page display's (guard-statistics-page.html)
+
+
+* University of the Assumption Parking statistics display (view options filter: day, week, month, year)
+
+
+* Account holder’s (guard) personal scanned/recorded cars statistics display (view options filter: day, week, month, year)
+
+
+
+
+3. Vehicle page displays (guard-vehicle-page.html)
+(time-in/ time-out book vehicle log)(this log page is shared for all guards and admin accounts, which means all data shown are all the same)
+
+
+* Show data in table format based on the date today(default date)(this is changeable for inspections of other date datas) datas shown are: date, driver name, vehicle type, platenumber, time-in, time-out (use null if datas are missing)
+
+
+4. Scan Qr code page (for time-in or time-out)
+* First method: Using phone guards can scan qr sticker of a vehicle then it will register to “vehicles scanned time-in/ time-out log page” (first scan within the day is the time-in the second scan would be the time-out log, then repeat procedure if vehicle came back)
+* Second method: Guards can type or input plate number to timein or time out a vehicle
+
+
+5. contact & information page displays (guard-contact&information-page.html)
+* Advisory Entry & Parking
+* General Policy on Parking Lot Use
+* Contact & Socials
+* Physical Address
+
+
+
+
+6. profile page displays (guard-profile-page.html)
+
+
+* Display guard’s name
+* Display guard’s contact number (editable by account holder)
+* Display guard’s Email (editable by account holder)
+* Display guard’s Address (editable by account holder)
+* logout button (logs out the account, then redirects to the login page)
+
+
+(footer)
+
+
+
+
+admin role pages
+(ADMIN ROLE UI)
+
+
+(Universal header)
+* Section1 of header top: top left: logo then beside it is “UA Parking System” text, center top: Welcome Admin, “display username here”, top right side: text “admin Dashboard”
+* Section2 of header middle: banner (use banner-day.png or banner-night.png, it changes based on day/ night mode)
+* Section3 of header bottom: Navigation bar buttons: Home, Statistics, Vehicle, Manage Accounts, Contact & Information, Profile, sun/moon toggle icon for day/night mode (navigation bar leads to the intended pages)
+
+
+(body)
+1. Home page displays (admin-home-page.html)
+
+
+* Mission & Vision
+* Core Values
+* Our Journey
+* Description of UA Park System
+
+
+2. statistics page displays (admin-statistics-page.html)
+
+
+* University of the Assumption Parking statistics display (view options filter: day, week, month, year)
+
+
+* Guards scanning cars statistics display (view options filter: day, week, month, year)
+
+
+
+
+3. Vehicle page displays (admin-vehicle-page.html)
+
+
+(time-in/ time-out book log)(this log page is shared for all guards and admin accounts, which means all data shown are all the same)
+
+
+* Show data in table format based on the date today(default date)(this is changeable for inspections of other date datas) datas shown are: date, driver name, vehicle type, platenumber, time-in, time-out (use null if datas are missing)
+* Encrypt button 
+* Decrpyt button
+
+
+(Note: admin has a button/power to encrypt and decrypt datas in the vehicles scanned page using the Data Encryption Standard/DES method, which will also affect what is shown in the guard’s ui vehicles scanned page)
+
+
+* Vehicle registration prices table displays (in the driver role ui, display this table but make it editable by admins, add delete, edit, and save buttons for this table(changes should apply in the driver role ui’s Vehicle registration prices table)
+
+
+4. Manage Accounts page (admin-manageaccounts-page.html)
+(for account acceptance, deletion & creation)(Note: displays two buttons, the show drivers button and the show guards button)
+
+
+* Show Drivers Button
+* Show Guards Button
+* Show Admins Button
+* Create an account button
+
+
+(Note: When the Show Drivers Button is pressed, it will show all driver names, contact number, email, vehicle type, Park or Drop-off, vehicle license plate, paid/unpaid toggle button, and delete vehicle button. These datas would be shown in table format(when u toggle the paid/unpaid button, it will blur and unblur the QR code of  the vehicle, and when u press the delete vehicle button, it will ask " Are you sure u want to delete this vehicle”(if yes, it will delete the all the vehicle’s data from the driver’s database))
+
+
+(Note: When the Show Guards Button is pressed, it will show all guard names, contact numbers, emails, and the delete guard account button. These data would be shown in table format(when u press the delete guard account button, it will ask " Are you sure u want to delete this guard account”). If yes, it will delete the guard’s account)
+
+
+(Note: When the Show Admins button is pressed, it will show all Admins' names, contact numbers, emails, and the delete admin account button. These data would be shown in table format(when u press the delete admin account button, it will ask " Are you sure u want to delete this guard account”). If yes, it will delete the admin account)
+
+
+(Note: when the create an account button is clicked, it will ask if it will be a guard account or an admin account. If guard, the account will be a guard role account; hence, if admin, the account will be an admin role account, then an input username and password will appear with a register button at the bottom that will create the account when pressed.
+
+
+5. contact & information page displays (admin-contact&information-page.html)
+* Advisory Entry & Parking
+* General Policy on Parking Lot Use
+* Contact & Socials
+* Physical Address
+
+
+6. profile page displays (admin-profile-page.html)
+
+
+* Display the admin's name
+* Display admin's number (editable by account holder)
+* Display admin's Email (editable by account holder)
+* Display admin's Address (editable by account holder)
+
+
+* logout button (logs out the account and then redirects to the login page)
+
+
+(footer)
+In the footer use day-footer.html if day while use night-footer.html if night

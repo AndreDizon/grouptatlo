@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR / Plate - UA Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <style>
+        /* --- GLOBAL & BODY STYLES --- */
+        body {
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+        }
+        body.night-mode {
+            background-color: #0d1117;
+        }
+
+        .layout-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* --- HEADER STYLES --- */
+        #middle-banner {
+            transition: background-image 0.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .bg-day-fallback { background-color: #87CEEB; }
+        .bg-night-fallback { background-color: #0f172a; }
+
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            display: block; margin-top: 5px; right: 0; background: #FFD700;
+            transition: width 0.3s ease; -webkit-transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; left: 0; background: #FFD700; }
+        .nav-link:hover { color: #FFD700; }
+
+        /* --- SCROLL REVEAL ANIMATIONS --- */
+        .reveal { opacity: 0; transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.up { transform: translateY(40px); }
+        .reveal.left { transform: translateX(-40px); }
+        .reveal.right { transform: translateX(40px); }
+        .reveal.is-visible { opacity: 1; transform: none !important; }
+
+        /* --- SCANNER ANIMATION --- */
+        .scan-line { width: 100%; height: 3px; background-color: #00ff00; box-shadow: 0 0 10px #00ff00; position: absolute; top: 0; animation: scan 2.5s infinite linear; }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        /* --- NIGHT MODE OVERRIDES --- */
+        body.night-mode .bg-white {
+            background-color: #1a2235 !important;
+            border-color: #2a3752 !important;
+        }
+        body.night-mode h1, body.night-mode h2 { color: #e2e8f0 !important; border-color: #2a3752 !important; }
+        body.night-mode label, body.night-mode p { color: #8fa0b5 !important; }
+        body.night-mode .text-gray-900 { color: #e2e8f0 !important; }
+        body.night-mode .text-gray-50 { color: #111827 !important; opacity: 0.8 !important;}
+        
+        body.night-mode input, body.night-mode select, body.night-mode textarea {
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            border-color: #2a3752 !important;
+            color: #e2e8f0 !important;
+        }
+        body.night-mode .border-gray-100 { border-color: #2a3752 !important; }
+        body.night-mode .border-gray-200 { border-color: #2a3752 !important; }
+        body.night-mode .border-gray-300 { border-color: #475569 !important; }
+        body.night-mode .bg-gray-900 { background-color: #000000 !important; }
+
+        /* --- FOOTER STYLES --- */
+        .animated-footer {
+            position: relative; margin-top: auto; height: 180px; width: 100%;
+            background: linear-gradient(to bottom, #d4f0ff 0%, #e6f7ff 100%);
+            overflow: hidden; border-top: 2px solid #bce6ff;
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        .animated-footer.night-mode {
+            background: linear-gradient(to bottom, #0a1020 0%, #17243b 100%);
+            border-top: 2px solid #283752;
+        }
+        .celestial-body {
+            position: absolute; top: 15px; right: 10%; width: 50px; height: 50px;
+            background-color: rgba(255, 235, 59, 0.8); border-radius: 50%;
+            box-shadow: 0 0 30px 15px rgba(255, 235, 59, 0.4); z-index: 1; transition: all 0.5s ease;
+        }
+        .animated-footer.night-mode .celestial-body {
+            width: 45px; height: 45px; background-color: #fcf9e3;
+            box-shadow: 0 0 25px 10px rgba(252, 249, 227, 0.2);
+        }
+        .star { position: absolute; background-color: white; border-radius: 50%; z-index: 0; opacity: 0; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .star { opacity: var(--star-opacity); }
+        .cloud, .cloud::before, .cloud::after { background: white; transition: background 0.5s ease; }
+        .cloud { position: absolute; border-radius: 50px; z-index: 2; opacity: 0.9; }
+        .cloud::before, .cloud::after { content: ''; position: absolute; border-radius: 50%; }
+        .cloud::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+        .cloud::after { width: 40px; height: 40px; top: -15px; right: 15px; }
+        .animated-footer.night-mode .cloud, .animated-footer.night-mode .cloud::before, .animated-footer.night-mode .cloud::after { background: rgba(255, 255, 255, 0.05); }
+        .cityscape { position: absolute; bottom: 40px; width: 100%; height: 90px; display: flex; align-items: flex-end; z-index: 3; }
+        .building { background-color: rgba(160, 220, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.4); border-bottom: none; box-sizing: border-box; position: relative; overflow: hidden; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .building { background-color: rgba(15, 22, 35, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); border-bottom: none; }
+        .window { position: absolute; background-color: rgba(255, 255, 255, 0.85); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .window { background-color: rgba(255, 240, 150, 0.85); box-shadow: 0 0 3px rgba(255, 240, 150, 0.5); }
+        .road { position: absolute; bottom: 0; width: 100%; height: 40px; background-color: #e0e0e0; border-top: 2px solid #ccc; z-index: 4; display: flex; align-items: center; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .road { background-color: #1e2430; border-top: 2px solid #11151c; }
+        .road-line { width: 100%; height: 2px; background-image: linear-gradient(90deg, #fff 50%, transparent 50%); background-size: 30px 2px; opacity: 0.5; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .road-line { opacity: 0.15; }
+        .car { position: absolute; bottom: 12px; width: 45px; height: 16px; background-color: #ffffff; border-radius: 8px; z-index: 5; box-shadow: 2px 2px 4px rgba(0,0,0,0.15); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .car { background-color: #8c97a6; box-shadow: 15px 0 10px -3px rgba(255, 255, 200, 0.5); }
+        .footer-content { position: absolute; bottom: 40px; width: 100%; padding: 0 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10; pointer-events: none; }
+        .footer-left { color: #00265e; transition: color 0.5s ease; }
+        .footer-left h3 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; text-transform: uppercase; transition: text-shadow 0.5s ease;}
+        .footer-left p { margin: 3px 0 12px 0; font-size: 0.85rem; color: #555; transition: color 0.5s ease;}
+        .animated-footer.night-mode .footer-left { color: #dbe4f0; }
+        .animated-footer.night-mode .footer-left h3 { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-left p { color: #8fa0b5; }
+        .footer-right { margin-bottom: 12px; pointer-events: auto; }
+        .footer-right a { color: #00265e; text-decoration: none; margin-left: 20px; font-size: 0.85rem; font-weight: 600; transition: color 0.5s ease, text-shadow 0.5s ease; }
+        .footer-right a:hover { text-decoration: underline; }
+        .animated-footer.night-mode .footer-right a { color: #dbe4f0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-right a:hover { color: #ffffff; }
+        .footer-bottom { position: absolute; bottom: 12px; width: 100%; text-align: center; z-index: 10; font-size: 0.75rem; color: #777; letter-spacing: 1px; transition: color 0.5s ease; }
+        .animated-footer.night-mode .footer-bottom { color: #5d6d85; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <header class="w-full shadow-lg relative z-40 flex flex-col">
+        <div id="top-bar" class="bg-[#002366] px-4 md:px-8 py-3 flex flex-col md:flex-row items-center justify-between shadow-sm z-20 gap-3 md:gap-0 transition-colors duration-300 border-b border-white/10">
+            <div class="flex items-center gap-3 w-full md:w-1/3 justify-center md:justify-start">
+                <img src="logo.png" alt="UA Logo" class="w-10 h-10 object-contain bg-white rounded-full p-0.5">
+                <span id="brand-text" class="font-extrabold text-xl text-white tracking-wide transition-colors duration-300">UA Parking System</span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center text-center">
+                <span id="welcome-text" class="text-white/80 font-semibold text-sm md:text-base transition-colors duration-300"><span id="guard-name-header" class="text-[#FFD700] font-bold">Loading...</span></span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center md:justify-end">
+                <span id="dashboard-title" class="bg-[#FFD700] text-[#002366] px-4 py-1.5 rounded-full text-xs md:text-sm font-bold tracking-wider shadow-sm uppercase transition-colors duration-300">GUARD DASHBOARD</span>
+            </div>
+        </div>
+
+        <div id="middle-banner" class="h-64 md:h-80 w-full bg-day-fallback relative shadow-inner" style="background-image: url('banner-day.png');">
+            <div class="absolute inset-0 bg-black/10"></div>
+        </div>
+
+        <div id="bottom-nav" class="bg-[#002366] text-white relative shadow-md z-20 border-t border-white/10 transition-colors duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-center md:justify-between">
+                <div class="hidden md:block w-10"></div>
+                <nav id="nav-links-container" class="flex items-center justify-center gap-4 md:gap-8 overflow-x-auto whitespace-nowrap px-2 no-scrollbar font-medium text-sm md:text-base w-full md:w-auto">
+                    <a href="guard-home-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Home</a>
+                    <a href="guard-statistics-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Statistics</a>
+                    <a href="guard-vehicle-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Vehicle</a>
+                    <a href="guard-scanqrcode-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Scan QR code</a>
+                    <a href="guard-contact&information-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Contact & Information</a>
+                    <a href="guard-profile-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Profile</a>
+                </nav>
+                <div class="hidden md:flex items-center justify-end w-10">
+                    <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none text-[#FFD700]" title="Toggle Day/Night Mode">
+                        <i id="theme-icon" data-lucide="sun" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="bottom-nav-mobile" class="md:hidden bg-[#001446] py-2 flex justify-center border-t border-white/10 transition-colors duration-300">
+            <button id="theme-toggle-btn-mobile" class="flex items-center gap-2 text-sm text-[#FFD700] hover:text-white transition-colors">
+                <i id="theme-icon-mobile" data-lucide="sun" class="w-4 h-4"></i>
+                <span id="theme-text-mobile">Switch to Night Mode</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow layout-container w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div class="reveal up text-center mb-8" data-delay="0">
+            <h1 class="text-3xl font-bold text-[#002366] transition-colors duration-300">Vehicle Entry / Exit Logging</h1>
+            <p class="text-gray-500 mt-2 max-w-lg mx-auto transition-colors duration-300">Use the scanner or manually input the plate number. The system will automatically register a Time-In or Time-Out.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div class="reveal left" data-delay="150">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col items-center h-full hover:shadow-lg transition-all duration-300">
+                    <div class="w-full flex items-center justify-between mb-4 border-b pb-3 transition-colors duration-300">
+                        <h2 class="text-lg font-bold text-[#002366] flex items-center gap-2 transition-colors duration-300">
+                            <i data-lucide="qr-code" class="w-5 h-5 text-[#FFD700]"></i> QR Scanner
+                        </h2>
+                        <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">Active</span>
+                    </div>
+                    <div class="relative w-full max-w-sm aspect-square bg-gray-900 rounded-lg overflow-hidden border-4 border-gray-300 flex items-center justify-center transition-colors duration-300">
+                        <video id="qr-video" class="w-full h-full object-cover" playsinline></video>
+                        <canvas id="qr-canvas" class="hidden"></canvas>
+                        <div class="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-white"></div>
+                        <div class="absolute top-4 right-4 w-8 h-8 border-t-4 border-r-4 border-white"></div>
+                        <div class="absolute bottom-4 left-4 w-8 h-8 border-b-4 border-l-4 border-white"></div>
+                        <div class="absolute bottom-4 right-4 w-8 h-8 border-b-4 border-r-4 border-white"></div>
+                        <div class="scan-line" id="scan-line"></div>
+                        <p id="qr-status" class="absolute text-white/50 text-sm">Align QR Sticker</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reveal right" data-delay="300">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col h-full hover:shadow-lg transition-all duration-300">
+                    <div class="w-full mb-4 border-b pb-3 transition-colors duration-300">
+                        <h2 class="text-lg font-bold text-[#002366] flex items-center gap-2 transition-colors duration-300">
+                            <i data-lucide="keyboard" class="w-5 h-5 text-[#FFD700]"></i> Manual Input
+                        </h2>
+                    </div>
+                    <div class="flex-grow flex flex-col justify-center">
+                        <form id="manual-input-form" class="space-y-6" onsubmit="handleManualInput(event);">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2 transition-colors duration-300">Vehicle Plate Number</label>
+                                <input id="plate-input" type="text" placeholder="ABC 1234" class="w-full text-center text-2xl uppercase font-bold tracking-widest border-2 border-gray-300 rounded-lg p-4 outline-none focus:border-[#002366] transition-colors duration-300" required>
+                            </div>
+                            <button type="submit" class="w-full bg-[#002366] text-white font-bold py-4 rounded-lg shadow hover:bg-[#001845] transition text-lg flex justify-center items-center gap-2">
+                                <i data-lucide="log-in" class="w-5 h-5"></i> <span id="submit-btn-text">Log Vehicle</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="animated-footer" id="animatedFooter">
+        <div id="stars-container"></div>
+        <div class="celestial-body" id="celestial-body"></div>
+        <div id="clouds-container"></div>
+        <div class="cityscape" id="cityscape"></div>
+        <div class="footer-content">
+            <div class="footer-left">
+                <h3>UA PARKING</h3>
+                <p>Campus Vehicle Management System</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Help & Support</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+        <div id="cars-container"></div>
+        <div class="road">
+            <div class="road-line"></div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 UNIVERSITY OF THE ASSUMPTION.
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // --- API AND USER SETUP ---
+        const API_BASE_URL = 'http://localhost:8000/api';
+        let currentGuardId = null;
+
+        // Load guard information
+        async function loadGuardInfo() {
+            const userRole = localStorage.getItem('userRole') || 'Guard';
+            const currentUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
+            const roleCapitalized = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+            document.getElementById('guard-name-header').textContent = `Welcome ${roleCapitalized}, ${currentUser}`;
+
+            // Get guard ID for parking session creation
+            // First try to get from localStorage
+            const storedUserId = localStorage.getItem('userId');
+            if (storedUserId) {
+                currentGuardId = parseInt(storedUserId);
+                console.log('✅ Guard ID from localStorage:', currentGuardId);
+                return;
+            }
+
+            // If not in localStorage, fetch from API
+            try {
+                const res = await fetch(`${API_BASE_URL}/users/?username=${currentUser}`);
+                if (res.ok) {
+                    const usersData = await res.json();
+                    const users = Array.isArray(usersData) ? usersData : (usersData.results || []);
+                    if (users.length > 0) {
+                        currentGuardId = users[0].id;
+                        console.log('✅ Guard ID from API:', currentGuardId);
+                    } else {
+                        console.warn('⚠️ No user found with username:', currentUser);
+                    }
+                } else {
+                    console.warn('⚠️ Failed to fetch users:', res.status);
+                }
+            } catch (error) {
+                console.warn('❌ Error fetching guard info:', error);
+            }
+        }
+
+        // --- HARDCODED DAY/NIGHT LOGIC ---
+        let isNightMode = false;
+        const topBar = document.getElementById('top-bar');
+        const bottomNav = document.getElementById('bottom-nav');
+        const bottomNavMobile = document.getElementById('bottom-nav-mobile');
+        const middleBanner = document.getElementById('middle-banner');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeToggleBtnMobile = document.getElementById('theme-toggle-btn-mobile');
+        const themeIconMobile = document.getElementById('theme-icon-mobile');
+        const themeTextMobile = document.getElementById('theme-text-mobile');
+        const footer = document.getElementById('animatedFooter');
+
+        function applyThemeStyles() {
+            document.body.classList.toggle('night-mode', isNightMode);
+            footer.classList.toggle('night-mode', isNightMode);
+
+            if (isNightMode) {
+                topBar.classList.replace('bg-[#002366]', 'bg-black');
+                middleBanner.style.backgroundImage = "url('banner-night.png')";
+                middleBanner.classList.replace('bg-day-fallback', 'bg-night-fallback');
+                bottomNav.classList.replace('bg-[#002366]', 'bg-black');
+                bottomNavMobile.classList.replace('bg-[#001446]', 'bg-black');
+                themeIcon.setAttribute('data-lucide', 'moon');
+                themeIconMobile.setAttribute('data-lucide', 'moon');
+                themeTextMobile.textContent = "Switch to Day Mode";
+            } else {
+                topBar.classList.replace('bg-black', 'bg-[#002366]');
+                middleBanner.style.backgroundImage = "url('banner-day.png')";
+                middleBanner.classList.replace('bg-night-fallback', 'bg-day-fallback');
+                bottomNav.classList.replace('bg-black', 'bg-[#002366]');
+                bottomNavMobile.classList.replace('bg-black', 'bg-[#001446]');
+                themeIcon.setAttribute('data-lucide', 'sun');
+                themeIconMobile.setAttribute('data-lucide', 'sun');
+                themeTextMobile.textContent = "Switch to Night Mode";
+            }
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            isNightMode = !isNightMode;
+            localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
+            applyThemeStyles();
+        }
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        // Load saved theme from localStorage
+        const savedTheme = localStorage.getItem('themeMode') || 'day';
+        isNightMode = savedTheme === 'night';
+        applyThemeStyles();
+
+        // --- QR CODE SCANNER ---
+        let scannerActive = false;
+        const video = document.getElementById('qr-video');
+        const canvas = document.getElementById('qr-canvas');
+        const qrStatus = document.getElementById('qr-status');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        let processedQRs = new Set();
+
+        async function startQRScanner() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+                video.srcObject = stream;
+                video.setAttribute('playsinline', true);
+                
+                // Wait for video to be ready
+                video.onloadedmetadata = () => {
+                    video.play();
+                    scannerActive = true;
+                    qrStatus.textContent = 'Scanner Active - Align QR';
+                    console.log('✓ Camera started, resolution:', video.videoWidth, 'x', video.videoHeight);
+                    processQRFrame();
+                };
+                
+            } catch (error) {
+                console.error('Camera access error:', error);
+                qrStatus.textContent = 'Camera not available. Use manual input.';
+                qrStatus.classList.add('text-red-400');
+            }
+        }
+
+        function processQRFrame() {
+            if (!scannerActive || video.paused || video.ended) {
+                setTimeout(processQRFrame, 100);
+                return;
+            }
+
+            if (video.videoWidth === 0 || video.videoHeight === 0) {
+                setTimeout(processQRFrame, 100);
+                return;
+            }
+
+            try {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Try with both inversion attempts for better detection
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'attemptBoth'
+                });
+
+                if (code && code.data) {
+                    const qrData = code.data.trim();
+                    console.log('✓ QR Code detected:', qrData);
+                    console.log('QR Details:', { points: code.location, data: code.data });
+                    
+                    // Avoid processing the same QR code multiple times
+                    if (!processedQRs.has(qrData)) {
+                        processedQRs.add(qrData);
+                        
+                        // Extract plate number
+                        const plateNumber = extractPlateNumber(qrData);
+                        console.log('→ Extracted plate:', plateNumber);
+                        qrStatus.textContent = `✓ Detected: ${plateNumber}`;
+                        qrStatus.style.color = '#00ff00';
+                        
+                        logVehicle(plateNumber);
+                        
+                        // Clear from set after 5 seconds to allow re-scanning
+                        setTimeout(() => processedQRs.delete(qrData), 5000);
+                    }
+                } else {
+                    // Uncomment for continuous debugging
+                    // qrStatus.textContent = 'Scanning...';
+                }
+            } catch (err) {
+                console.error('QR processing error:', err);
+            }
+
+            setTimeout(processQRFrame, 100);
+        }
+
+        function extractPlateNumber(qrData) {
+            // QR format is: UA_PARKING_{id}_{plate_number}
+            // Extract plate number from the end
+            const parts = qrData.split('_');
+            if (parts.length >= 4) {
+                // Join remaining parts after UA_PARKING_{id}
+                const plateNumber = parts.slice(3).join('_').trim();
+                if (plateNumber) {
+                    return plateNumber.toUpperCase();
+                }
+            }
+            
+            // Fallback: try to find plate pattern with optional space
+            const plateMatch = qrData.match(/([A-Z]{2,3}\s?\d{3,4})/i);
+            if (plateMatch) {
+                return plateMatch[1].trim().toUpperCase();
+            }
+            
+            // If still nothing found, return the whole data
+            console.warn('Could not extract plate from QR:', qrData);
+            return qrData.toUpperCase();
+        }
+
+        // --- MANUAL INPUT HANDLER ---
+        async function handleManualInput(event) {
+            event.preventDefault();
+            const plateInput = document.getElementById('plate-input');
+            const plateNumber = plateInput.value.trim().toUpperCase();
+
+            if (!plateNumber) {
+                alert('Please enter a plate number');
+                return;
+            }
+
+            await logVehicle(plateNumber);
+            plateInput.value = '';
+        }
+
+        // --- VEHICLE LOGGING ---
+        async function logVehicle(plateNumber) {
+            const submitBtn = document.getElementById('submit-btn-text');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Processing...';
+
+            try {
+                console.log('1️⃣ Starting vehicle lookup for:', plateNumber);
+                
+                // Normalize plate number (remove spaces, convert to uppercase)
+                const normalizedPlate = plateNumber.replace(/\s+/g, '').toUpperCase();
+                console.log('   Normalized plate:', normalizedPlate);
+                
+                // Find vehicle by plate number - try direct lookup first
+                let vehicleRes = await fetch(`${API_BASE_URL}/vehicles/?plate_number=${plateNumber}`);
+                console.log('2️⃣ Vehicle lookup response:', vehicleRes.status);
+                
+                if (!vehicleRes.ok) throw new Error(`Vehicle lookup failed: ${vehicleRes.status}`);
+                const vehicleData = await vehicleRes.json();
+                let vehicles = Array.isArray(vehicleData) ? vehicleData : (vehicleData.results || []);
+
+                console.log('3️⃣ Vehicles found:', vehicles.length);
+                
+                // If no exact match, try fetching all vehicles and match by normalized plate
+                if (vehicles.length === 0) {
+                    console.log('   No exact match, fetching all vehicles for flexible matching...');
+                    vehicleRes = await fetch(`${API_BASE_URL}/vehicles/`);
+                    if (vehicleRes.ok) {
+                        const allVehicleData = await vehicleRes.json();
+                        const allVehicles = Array.isArray(allVehicleData) ? allVehicleData : (allVehicleData.results || []);
+                        
+                        // Match by normalized plate (ignore spaces)
+                        vehicles = allVehicles.filter(v => 
+                            v.plate_number.replace(/\s+/g, '').toUpperCase() === normalizedPlate
+                        );
+                        console.log('   Flexible match found:', vehicles.length);
+                    }
+                }
+
+                if (vehicles.length === 0) {
+                    console.error('❌ No vehicle found with plate:', plateNumber);
+                    alert(`Vehicle with plate "${plateNumber}" not found in system`);
+                    submitBtn.textContent = originalText;
+                    return;
+                }
+
+                const vehicle = vehicles[0];
+                
+                // Check if vehicle is registered
+                if (!vehicle.is_registered) {
+                    console.warn('⚠️ Vehicle not registered:', plateNumber);
+                    alert(`Vehicle "${plateNumber}" is not registered. Cannot log entry/exit.`);
+                    submitBtn.textContent = originalText;
+                    return;
+                }
+
+                console.log('4️⃣ Vehicle registered, looking for existing sessions...');
+                
+                // Find the most recent parking session for this vehicle
+                const sessionsRes = await fetch(`${API_BASE_URL}/parking-sessions/?vehicle=${vehicle.id}`);
+                if (!sessionsRes.ok) throw new Error('Sessions lookup failed');
+                const sessionsData = await sessionsRes.json();
+                const sessions = Array.isArray(sessionsData) ? sessionsData : (sessionsData.results || []);
+
+                console.log('5️⃣ Sessions found:', sessions.length);
+
+                let scanType = 'in';
+                let isTimeIn = true;
+
+                // Find a session that needs time_out (time_in is set but time_out is null)
+                const pendingSession = sessions.find(s => s.time_in && !s.time_out);
+                
+                if (pendingSession) {
+                    // Scan as TIME-OUT
+                    console.log('6️⃣ Found pending session, logging TIME-OUT...');
+                    scanType = 'out';
+                    isTimeIn = false;
+                } else {
+                    // Scan as TIME-IN
+                    console.log('6️⃣ No pending session, logging TIME-IN...');
+                    scanType = 'in';
+                    isTimeIn = true;
+                }
+
+                // Construct QR code data format: UA_PARKING_{vehicle_id}_{plate_number}
+                const qrData = `UA_PARKING_${vehicle.id}_${vehicle.plate_number}`;
+                
+                // Call backend scan_qr endpoint which records guard and creates/updates session
+                console.log('7️⃣ Calling scan_qr endpoint with scan_type:', scanType);
+                console.log('   Guard ID:', currentGuardId);
+                console.log('   QR Data:', qrData);
+                
+                const scanRes = await fetch(`${API_BASE_URL}/scan-logs/scan_qr/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        qr_data: qrData,
+                        scan_type: scanType,
+                        guard_id: currentGuardId  // Send guard ID so backend knows which guard scanned
+                    })
+                });
+
+                if (!scanRes.ok) {
+                    const errorText = await scanRes.text();
+                    console.error('API Error:', errorText);
+                    throw new Error(`Failed to scan QR code: ${scanRes.status}`);
+                }
+                
+                const scanLog = await scanRes.json();
+                console.log('✅ Scan recorded:', scanLog);
+                
+                if (isTimeIn) {
+                    console.log('✅ TIME-IN logged:', plateNumber);
+                    alert(`✓ TIME-IN logged for ${plateNumber}\nEntry time: ${new Date().toLocaleTimeString()}`);
+                } else {
+                    console.log('✅ TIME-OUT logged:', plateNumber);
+                    alert(`✓ TIME-OUT logged for ${plateNumber}\nExit time: ${new Date().toLocaleTimeString()}`);
+                }
+
+                // Update document plate display
+                document.getElementById('plate-input').value = plateNumber;
+
+            } catch (error) {
+                console.error('❌ Error logging vehicle:', error);
+                alert(`Error: ${error.message || 'Failed to log vehicle'}`);
+            } finally {
+                submitBtn.textContent = originalText;
+            }
+        }
+
+        // --- Scroll Reveal Animations ---
+        document.addEventListener("DOMContentLoaded", () => {
+            loadGuardInfo();
+            startQRScanner();
+
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        setTimeout(() => { el.classList.add('is-visible'); }, parseInt(el.getAttribute('data-delay')) || 0);
+                        obs.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.15 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        });
+
+        // --- FOOTER LOGIC (Animations) ---
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 40; i++) {
+            let star = document.createElement('div');
+            star.classList.add('star');
+            let size = Math.random() * 2;
+            star.style.width = `${size}px`; star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`; star.style.top = `${Math.random() * 120}px`;
+            star.style.setProperty('--star-opacity', Math.random() * 0.8 + 0.1);
+            starsContainer.appendChild(star);
+        }
+
+        const cityscape = document.getElementById('cityscape');
+        const numBuildings = Math.floor(window.innerWidth / 30); 
+        for (let i = 0; i < numBuildings; i++) {
+            let building = document.createElement('div'); building.classList.add('building');
+            let width = Math.random() * 35 + 25; let height = Math.random() * 70 + 20; 
+            building.style.width = `${width}px`; building.style.height = `${height}px`;
+            const windowSize = 4; const gap = 4; const padding = 5; 
+            const cols = Math.floor((width - (padding * 2) + gap) / (windowSize + gap));
+            const rows = Math.floor((height - (padding * 2) + gap) / (windowSize + gap));
+            for (let r = 0; r < rows; r++) { 
+                for (let c = 0; c < cols; c++) {
+                    if (Math.random() > 0.65) {
+                        let win = document.createElement('div'); win.classList.add('window');
+                        win.style.width = `${windowSize}px`; win.style.height = `${windowSize}px`;
+                        win.style.left = `${padding + c * (windowSize + gap)}px`; win.style.top = `${padding + r * (windowSize + gap)}px`;
+                        building.appendChild(win);
+                    }
+                }
+            }
+            cityscape.appendChild(building);
+        }
+
+        const cloudsContainer = document.getElementById('clouds-container');
+        const clouds = [];
+        for (let i = 0; i < 4; i++) {
+            let cloud = document.createElement('div'); cloud.classList.add('cloud');
+            let width = Math.random() * 50 + 70; let height = width / 3;
+            let top = Math.random() * 40 + 5; let speed = Math.random() * 0.3 + 0.1;
+            let xPos = Math.random() * window.innerWidth;
+            cloud.style.width = `${width}px`; cloud.style.height = `${height}px`; cloud.style.top = `${top}px`;
+            cloudsContainer.appendChild(cloud);
+            clouds.push({ element: cloud, x: xPos, speed: speed });
+        }
+
+        const carsContainer = document.getElementById('cars-container');
+        const cars = [];
+        for (let i = 0; i < 3; i++) { 
+            let car = document.createElement('div'); car.classList.add('car');
+            let speed = Math.random() * 1.5 + 1.2; let xPos = Math.random() * window.innerWidth;
+            carsContainer.appendChild(car);
+            cars.push({ element: car, x: xPos, speed: speed });
+        }
+
+        function animateFooter() {
+            clouds.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 150) { c.x = -150; c.element.style.top = `${Math.random() * 40 + 5}px`; }
+                c.element.style.left = `${c.x}px`;
+            });
+            cars.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 60) { c.x = -60; } 
+                c.element.style.left = `${c.x}px`;
+            });
+            requestAnimationFrame(animateFooter);
+        }
+        animateFooter();
+    </script>
+</body>
+</html>

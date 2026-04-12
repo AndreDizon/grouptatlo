@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Profile - UA Parking System</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), url('University-of-the-Assumption.jpeg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; box-sizing: border-box;}
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); width: 100%; max-width: 450px; text-align: center; }
+        .logo { width: 70px; margin-bottom: 10px; filter: drop-shadow(-8px 4px 6px rgba(0, 0, 0, 0.3)); }
+        h2 { color: #003882; margin: 0 0 5px 0; font-size: 1.4rem; }
+        p { color: #666; margin-bottom: 25px; font-size: 0.9rem; }
+        .progress-steps { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .step { flex: 1; text-align: center; position: relative; }
+        .step::after { content: ''; position: absolute; top: 15px; right: -50%; width: 100%; height: 2px; background-color: #ddd; z-index: 0; }
+        .step:last-child::after { display: none; }
+        .step-circle { width: 30px; height: 30px; background-color: #ddd; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; position: relative; z-index: 1; }
+        .step.active .step-circle { background-color: #003882; }
+        .step-label { font-size: 0.75rem; color: #666; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: #333; margin-bottom: 5px; font-weight: 600; }
+        .form-group small { display: block; font-size: 0.75rem; color: #999; margin-top: 3px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        .form-control:focus { outline: none; border-color: #003882; box-shadow: 0 0 5px rgba(0, 56, 130, 0.3); }
+        input[type="file"] { padding: 7px; background: #f9f9f9; }
+        .btn { width: 100%; padding: 12px; background-color: #003882; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; transition: background 0.3s; }
+        .btn:hover { background-color: #00265e; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error-message { color: #CE2029; font-size: 0.85rem; margin-top: 10px; display: none; text-align: left; background-color: #ffebee; padding: 10px; border-radius: 4px; }
+        .error-message.show { display: block; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
+        .btn.loading { pointer-events: none; opacity: 0.8; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h2>Setup Profile</h2>
+        <p>Complete your profile to get started.</p>
+
+        <div class="progress-steps">
+            <div class="step">
+                <div class="step-circle">✓</div>
+                <div class="step-label">Account</div>
+            </div>
+            <div class="step active">
+                <div class="step-circle">2</div>
+                <div class="step-label">Profile</div>
+            </div>
+            <div class="step">
+                <div class="step-circle">3</div>
+                <div class="step-label">Done</div>
+            </div>
+        </div>
+
+        <form id="profileForm">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="displayUsername" class="form-control" disabled>
+                <small>Your registered username</small>
+            </div>
+
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="fullName" class="form-control" required placeholder="Juan Dela Cruz">
+            </div>
+
+            <div class="form-group">
+                <label>User Type *</label>
+                <select id="userType" class="form-control" required>
+                    <option value="" disabled selected>Select your type...</option>
+                    <option value="student">Student</option>
+                    <option value="faculty">Faculty</option>
+                    <option value="staff">Staff</option>
+                    <option value="visitor">Visitor</option>
+                </select>
+                <small>Choose the category that best describes you</small>
+            </div>
+
+            <div class="form-group">
+                <label>Contact Number *</label>
+                <input type="tel" id="phone" class="form-control" required placeholder="09123456789">
+                <small>For emergency contact</small>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" id="email" class="form-control" required placeholder="you@university.edu.ph">
+            </div>
+
+            <div class="form-group">
+                <label>Complete Address *</label>
+                <input type="text" id="address" class="form-control" required placeholder="123 Main Street, City, Province">
+            </div>
+
+            <button type="submit" class="btn" id="setupBtn">Complete Profile Setup</button>
+            <div class="error-message" id="errorMessage"></div>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        const profileForm = document.getElementById('profileForm');
+        const setupBtn = document.getElementById('setupBtn');
+        const displayUsername = document.getElementById('displayUsername');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let newUserData;
+
+        // Load new user data from registration
+        function loadNewUserData() {
+            const data = sessionStorage.getItem('newUser');
+            if (data) {
+                newUserData = JSON.parse(data);
+                displayUsername.value = newUserData.username;
+            } else {
+                // Fallback if accessed directly
+                errorMessage.textContent = 'Invalid session. Please register first.';
+                errorMessage.classList.add('show');
+                setTimeout(() => {
+                    window.location.href = 'register.html';
+                }, 2000);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', loadNewUserData);
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        function setLoading(isLoading) {
+            setupBtn.disabled = isLoading;
+            if (isLoading) {
+                setupBtn.classList.add('loading');
+                setupBtn.innerHTML = '<span class="spinner"></span>Completing Setup...';
+            } else {
+                setupBtn.classList.remove('loading');
+                setupBtn.innerHTML = 'Complete Profile Setup';
+            }
+        }
+
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validatePhone(phone) {
+            const phoneRegex = /^[0-9\s\-\+\(\)]{10,20}$/;
+            return phoneRegex.test(phone.replace(/\s/g, ''));
+        }
+
+        profileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideError();
+
+            // Validate all fields
+            const fullName = document.getElementById('fullName').value.trim();
+            const userType = document.getElementById('userType').value;
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const address = document.getElementById('address').value.trim();
+
+            if (!fullName) {
+                showError('Full name is required.');
+                return;
+            }
+
+            if (!userType) {
+                showError('Please select your user type.');
+                return;
+            }
+
+            if (!phone) {
+                showError('Contact number is required.');
+                return;
+            }
+
+            if (!validatePhone(phone)) {
+                showError('Please enter a valid phone number.');
+                return;
+            }
+
+            if (!email) {
+                showError('Email address is required.');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                showError('Please enter a valid email address.');
+                return;
+            }
+
+            if (!address) {
+                showError('Complete address is required.');
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                const profileData = {
+                    username: newUserData.username,
+                    full_name: fullName,
+                    user_type: userType,
+                    phone: phone,
+                    email: email,
+                    address: address,
+                    created_at: new Date().toISOString()
+                };
+
+                // Save to localStorage
+                const userProfiles = JSON.parse(localStorage.getItem('userProfiles') || '{}');
+                userProfiles[newUserData.username] = profileData;
+                localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
+
+                // Mark user as having completed setup
+                localStorage.setItem('currentUser', newUserData.username);
+                localStorage.setItem('userRole', 'driver');
+                
+                // Clear session data
+                sessionStorage.removeItem('newUser');
+
+                // Redirect after successful setup
+                setTimeout(() => {
+                    window.location.href = 'driver-home-page.html';
+                }, 1000);
+
+            } catch (error) {
+                showError('Failed to save profile. Please try again.');
+                console.error('Profile save error:', error);
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>

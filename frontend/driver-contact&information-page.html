@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact & Information - UA Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- GLOBAL & BODY STYLES --- */
+        body {
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+            scroll-behavior: smooth;
+        }
+        body.night-mode {
+            background-color: #0d1117;
+        }
+
+        .layout-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* --- HEADER STYLES --- */
+        #middle-banner {
+            transition: background-image 0.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .bg-day-fallback { background-color: #87CEEB; }
+        .bg-night-fallback { background-color: #0f172a; }
+
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            display: block; margin-top: 5px; right: 0; background: #FFD700;
+            transition: width 0.3s ease; -webkit-transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; left: 0; background: #FFD700; }
+        .nav-link:hover { color: #FFD700; }
+
+        /* --- SCROLL REVEAL ANIMATIONS --- */
+        .reveal { opacity: 0; transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.up { transform: translateY(40px); }
+        .reveal.left { transform: translateX(-40px); }
+        .reveal.right { transform: translateX(40px); }
+        .reveal.none { transform: none; }
+        .reveal.is-visible { opacity: 1; transform: none !important; }
+
+        /* --- NIGHT MODE OVERRIDES --- */
+        body.night-mode .bg-white,
+        body.night-mode .bg-\[\#f8fafc\] {
+            background-color: #1a2235 !important;
+            border-color: #2a3752 !important;
+            color: #e2e8f0;
+        }
+        body.night-mode h2, body.night-mode h3, body.night-mode .text-\[\#002366\] {
+            color: #e2e8f0 !important;
+        }
+        body.night-mode .text-\[\#5A6EA0\] {
+            color: #8fa0b5 !important;
+        }
+
+        /* --- FOOTER STYLES --- */
+        .animated-footer {
+            position: relative; margin-top: auto; height: 180px; width: 100%;
+            background: linear-gradient(to bottom, #d4f0ff 0%, #e6f7ff 100%);
+            overflow: hidden; border-top: 2px solid #bce6ff;
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        .animated-footer.night-mode {
+            background: linear-gradient(to bottom, #0a1020 0%, #17243b 100%);
+            border-top: 2px solid #283752;
+        }
+        .celestial-body {
+            position: absolute; top: 15px; right: 10%; width: 50px; height: 50px;
+            background-color: rgba(255, 235, 59, 0.8); border-radius: 50%;
+            box-shadow: 0 0 30px 15px rgba(255, 235, 59, 0.4); z-index: 1; transition: all 0.5s ease;
+        }
+        .animated-footer.night-mode .celestial-body {
+            width: 45px; height: 45px; background-color: #fcf9e3;
+            box-shadow: 0 0 25px 10px rgba(252, 249, 227, 0.2);
+        }
+        .star { position: absolute; background-color: white; border-radius: 50%; z-index: 0; opacity: 0; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .star { opacity: var(--star-opacity); }
+        .cloud, .cloud::before, .cloud::after { background: white; transition: background 0.5s ease; }
+        .cloud { position: absolute; border-radius: 50px; z-index: 2; opacity: 0.9; }
+        .cloud::before, .cloud::after { content: ''; position: absolute; border-radius: 50%; }
+        .cloud::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+        .cloud::after { width: 40px; height: 40px; top: -15px; right: 15px; }
+        .animated-footer.night-mode .cloud, .animated-footer.night-mode .cloud::before, .animated-footer.night-mode .cloud::after { background: rgba(255, 255, 255, 0.05); }
+        .cityscape { position: absolute; bottom: 40px; width: 100%; height: 90px; display: flex; align-items: flex-end; z-index: 3; }
+        .building { background-color: rgba(160, 220, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.4); border-bottom: none; box-sizing: border-box; position: relative; overflow: hidden; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .building { background-color: rgba(15, 22, 35, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); border-bottom: none; }
+        .window { position: absolute; background-color: rgba(255, 255, 255, 0.85); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .window { background-color: rgba(255, 240, 150, 0.85); box-shadow: 0 0 3px rgba(255, 240, 150, 0.5); }
+        .road { position: absolute; bottom: 0; width: 100%; height: 40px; background-color: #e0e0e0; border-top: 2px solid #ccc; z-index: 4; display: flex; align-items: center; transition: background-color 0.5s ease, border-color 0.5s ease; }
+        .animated-footer.night-mode .road { background-color: #1e2430; border-top: 2px solid #11151c; }
+        .road-line { width: 100%; height: 2px; background-image: linear-gradient(90deg, #fff 50%, transparent 50%); background-size: 30px 2px; opacity: 0.5; transition: opacity 0.5s ease; }
+        .animated-footer.night-mode .road-line { opacity: 0.15; }
+        .car { position: absolute; bottom: 12px; width: 45px; height: 16px; background-color: #ffffff; border-radius: 8px; z-index: 5; box-shadow: 2px 2px 4px rgba(0,0,0,0.15); transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+        .animated-footer.night-mode .car { background-color: #8c97a6; box-shadow: 15px 0 10px -3px rgba(255, 255, 200, 0.5); }
+        .footer-content { position: absolute; bottom: 40px; width: 100%; padding: 0 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10; pointer-events: none; }
+        .footer-left { color: #00265e; transition: color 0.5s ease; }
+        .footer-left h3 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; text-transform: uppercase; transition: text-shadow 0.5s ease;}
+        .footer-left p { margin: 3px 0 12px 0; font-size: 0.85rem; color: #555; transition: color 0.5s ease;}
+        .animated-footer.night-mode .footer-left { color: #dbe4f0; }
+        .animated-footer.night-mode .footer-left h3 { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-left p { color: #8fa0b5; }
+        .footer-right { margin-bottom: 12px; pointer-events: auto; }
+        .footer-right a { color: #00265e; text-decoration: none; margin-left: 20px; font-size: 0.85rem; font-weight: 600; transition: color 0.5s ease, text-shadow 0.5s ease; }
+        .footer-right a:hover { text-decoration: underline; }
+        .animated-footer.night-mode .footer-right a { color: #dbe4f0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .animated-footer.night-mode .footer-right a:hover { color: #ffffff; }
+        .footer-bottom { position: absolute; bottom: 12px; width: 100%; text-align: center; z-index: 10; font-size: 0.75rem; color: #777; letter-spacing: 1px; transition: color 0.5s ease; }
+        .animated-footer.night-mode .footer-bottom { color: #5d6d85; }
+    </style>
+</head>
+<body>
+
+    <header class="w-full shadow-lg relative z-40 flex flex-col">
+        <div id="top-bar" class="bg-[#002366] px-4 md:px-8 py-3 flex flex-col md:flex-row items-center justify-between shadow-sm z-20 gap-3 md:gap-0 transition-colors duration-300 border-b border-white/10">
+            <div class="flex items-center gap-3 w-full md:w-1/3 justify-center md:justify-start">
+                <img src="logo.png" alt="UA Logo" class="w-10 h-10 object-contain bg-white rounded-full p-0.5">
+                <span id="brand-text" class="font-extrabold text-xl text-white tracking-wide transition-colors duration-300">UA Parking System</span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center text-center">
+                <span id="welcome-text" class="text-white/80 font-semibold text-sm md:text-base transition-colors duration-300"><span id="driver-name-header" class="text-[#FFD700] font-bold">Loading...</span></span>
+            </div>
+            <div class="w-full md:w-1/3 flex justify-center md:justify-end">
+                <span id="dashboard-title" class="bg-[#FFD700] text-[#002366] px-4 py-1.5 rounded-full text-xs md:text-sm font-bold tracking-wider shadow-sm uppercase transition-colors duration-300">DRIVER DASHBOARD</span>
+            </div>
+        </div>
+
+        <div id="middle-banner" class="h-64 md:h-80 w-full bg-day-fallback relative shadow-inner" style="background-image: url('banner-day.png');">
+            <div class="absolute inset-0 bg-black/10"></div>
+        </div>
+
+        <div id="bottom-nav" class="bg-[#002366] text-white relative shadow-md z-20 border-t border-white/10 transition-colors duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-center md:justify-between">
+                <div class="hidden md:block w-10"></div>
+                <nav id="nav-links-container" class="flex items-center justify-center gap-4 md:gap-8 overflow-x-auto whitespace-nowrap px-2 no-scrollbar font-medium text-sm md:text-base w-full md:w-auto">
+                    <a href="driver-home-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Home</a>
+                    <a href="driver-parking-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Parking</a>
+                    <a href="driver-vehicle-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Vehicle</a>
+                    <a href="driver-contact&information-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Contact & Information</a>
+                    <a href="driver-profile-page.html" class="nav-link py-2 text-white/90 hover:text-[#FFD700]">Profile</a>
+                </nav>
+                <div class="hidden md:flex items-center justify-end w-10">
+                    <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none text-[#FFD700]" title="Toggle Day/Night Mode">
+                        <i id="theme-icon" data-lucide="sun" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="bottom-nav-mobile" class="md:hidden bg-[#001446] py-2 flex justify-center border-t border-white/10 transition-colors duration-300">
+            <button id="theme-toggle-btn-mobile" class="flex items-center gap-2 text-sm text-[#FFD700] hover:text-white transition-colors">
+                <i id="theme-icon-mobile" data-lucide="sun" class="w-4 h-4"></i>
+                <span id="theme-text-mobile">Switch to Night Mode</span>
+            </button>
+        </div>
+    </header>
+    <main class="flex-grow py-12 px-8 overflow-x-hidden">
+        <div class="layout-container">
+            
+            <section class="relative rounded-3xl overflow-hidden mb-10 h-48 bg-[#002366]">
+                <div class="absolute inset-0 bg-cover bg-center opacity-30" style="background-image: url('bg1.jpg');"></div>
+                <div class="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#FFD700]/10 -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-[#CE2029]/20 translate-y-1/2 -translate-x-1/2"></div>
+
+                <div class="relative z-10 flex flex-col items-center justify-center text-center h-full px-8">
+                    <div class="reveal none" data-delay="0">
+                        <h1 class="text-white font-bold text-3xl md:text-4xl mb-2">
+                            Contact & <span class="text-[#FFD700]">Information</span>
+                        </h1>
+                        <p class="text-white/80 text-sm md:text-base">Rules, guidelines, and ways to reach the UA community.</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid lg:grid-cols-12 gap-8 mb-14">
+                
+                <div class="lg:col-span-7 space-y-8">
+                    
+                    <div class="reveal left" data-delay="0">
+                        <div class="bg-white rounded-3xl p-8 shadow-sm border border-[#E8EEFC] border-l-4 border-l-[#CE2029]">
+                            <div class="flex items-center gap-3 mb-5">
+                                <div class="w-10 h-10 rounded-full bg-[#CE2029]/10 flex items-center justify-center text-[#CE2029]">
+                                    <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-[#002366]">Advisory Entry & Parking</h2>
+                            </div>
+                            
+                            <p class="text-[#5A6EA0] leading-relaxed mb-5 font-medium">
+                                To keep our campus safe, orderly, and secure, the <span class="text-[#CE2029] font-bold">"no sticker, no entry"</span> policy will be strictly implemented starting September 30, 2025.
+                            </p>
+
+                            <div class="space-y-4">
+                                <div class="bg-[#f8fafc] p-4 rounded-xl border border-[#E8EEFC]">
+                                    <h3 class="font-bold text-[#002366] flex items-center gap-2 mb-1">
+                                        <i data-lucide="car-front" class="w-4 h-4 text-[#FFD700]"></i> UA Parking Sticker
+                                    </h3>
+                                    <p class="text-[#5A6EA0] text-sm">Only vehicles with an official UA parking sticker will be allowed to enter and park inside the campus.</p>
+                                </div>
+                                <div class="bg-[#f8fafc] p-4 rounded-xl border border-[#E8EEFC]">
+                                    <h3 class="font-bold text-[#002366] flex items-center gap-2 mb-1">
+                                        <i data-lucide="users" class="w-4 h-4 text-[#FFD700]"></i> Parents & Guardians
+                                    </h3>
+                                    <p class="text-[#5A6EA0] text-sm">Those who do not have stickers yet, please secure a <span class="text-green-600 font-semibold">green sticker</span> for drop-off and pick-up purposes.</p>
+                                </div>
+                                <div class="bg-[#f8fafc] p-4 rounded-xl border border-[#E8EEFC]">
+                                    <h3 class="font-bold text-[#002366] flex items-center gap-2 mb-1">
+                                        <i data-lucide="user-check" class="w-4 h-4 text-[#FFD700]"></i> Visitors
+                                    </h3>
+                                    <p class="text-[#5A6EA0] text-sm">Kindly log in at the guardhouse and secure a visitor's pass before entry.</p>
+                                </div>
+                            </div>
+                            
+                            <p class="mt-5 text-sm text-[#002366] font-medium bg-[#FFD700]/10 p-3 rounded-lg text-center">
+                                We sincerely ask for your cooperation in observing this policy as part of our efforts to maintain a safe and smooth campus environment for everyone.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="policy-section" class="reveal left" data-delay="150">
+                        <div class="bg-white rounded-3xl p-8 shadow-sm border border-[#E8EEFC]">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-10 h-10 rounded-full bg-[#002366]/10 flex items-center justify-center text-[#002366]">
+                                    <i data-lucide="scale" class="w-5 h-5"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-[#002366]">General Policy on Parking Lot Use</h2>
+                            </div>
+
+                            <p class="text-[#5A6EA0] mb-6 text-sm leading-relaxed">
+                                In line with our commitment to safety, order, and the fair use of campus facilities, the University of the Assumption is implementing the following guidelines for the use of its parking areas. All members of the University community, including staff, students, and guests, are expected to comply with these regulations:
+                            </p>
+
+                            <div id="policy-container" class="relative overflow-hidden transition-all duration-700 ease-in-out max-h-64">
+                                <div class="space-y-6 text-sm text-[#5A6EA0] pb-8">
+                                    <div>
+                                        <h3 class="font-bold text-[#002366] text-base mb-2">1. Authorized Use</h3>
+                                        <p class="mb-2">Only vehicles with valid authorization may park within the University premises. These include:</p>
+                                        <ul class="list-disc pl-5 space-y-1">
+                                            <li>School personnel with approved parking privileges and a valid University-issued parking sticker.</li>
+                                            <li>Enrolled students with registered parking permits and visible vehicle stickers.</li>
+                                            <li>Official visitors with a temporary visitor's pass issued by the security personnel at the entrance.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-[#002366] text-base mb-2">2. Staff Parking</h3>
+                                        <p>Designated parking zones are assigned to faculty and staff. A valid University parking sticker must be clearly displayed at all times. Unauthorized use of staff parking spaces is not permitted.</p>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-[#002366] text-base mb-2">3. Visitor Parking</h3>
+                                        <p class="mb-2">All visitors are required to:</p>
+                                        <ul class="list-disc pl-5 space-y-1">
+                                            <li>Report to the security office at the entrance upon arrival.</li>
+                                            <li>Present a valid government-issued ID in exchange for a Visitor's Parking Pass.</li>
+                                            <li>Park only in the designated visitor parking area.</li>
+                                            <li>Return the parking pass to security personnel to reclaim their ID upon exit.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-[#002366] text-base mb-2">4. Parking Rules and Restrictions</h3>
+                                        <p>All drivers must comply with posted signs, designated parking zones, and security personnel instructions. Parking in restricted areas (e.g., fire lanes, driveways, reserved slots) is strictly prohibited.</p>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-[#002366] text-base mb-2">5. Enforcement and Violations</h3>
+                                        <p class="mb-2">Violations of parking rules may result in the following:</p>
+                                        <ul class="list-none space-y-1 bg-[#f8fafc] p-3 rounded-xl border border-[#E8EEFC]">
+                                            <li><span class="font-semibold text-[#002366]">First Offense:</span> Written warning or reprimand.</li>
+                                            <li><span class="font-semibold text-[#002366]">Second Offense:</span> Revocation of parking privileges.</li>
+                                            <li><span class="font-semibold text-[#CE2029]">Severe Cases:</span> Towing of the vehicle at the owner's expense.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-[#002366] text-base mb-2">6. Liability Disclaimer</h3>
+                                        <p>The University assumes no responsibility for loss, theft, or damage to vehicles or their contents while parked on the parking facility. Drivers are strongly advised to secure their vehicles and avoid leaving valuables inside.</p>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-[#002366] text-base mb-2">7. Common Parking Violations</h3>
+                                        <p class="mb-2">Below is a list of common violations that may result in warnings, penalties, or revocation of parking privileges within the school parking facility:</p>
+                                        <ul class="list-disc pl-5 space-y-1">
+                                            <li>Parking without a valid permit or payment.</li>
+                                            <li>Displaying an expired, invalid, forged, or copied permit.</li>
+                                            <li>Using a forged, stolen, or copied permit.</li>
+                                            <li>Occupying more than one parking space.</li>
+                                            <li>Parking in a reserved or restricted space (e.g., for staff, visitors, PWDs, or EVs).</li>
+                                            <li>Blocking driveways, fire lanes, emergency exits, or pedestrian paths.</li>
+                                            <li>Parking in "No Parking" zones.</li>
+                                            <li>Obstructing another vehicle.</li>
+                                            <li>Parking in unauthorized areas (e.g., staff or faculty area).</li>
+                                            <li>Leaving abandoned or inoperable vehicles in the lot.</li>
+                                            <li>Parking oversized or unauthorized vehicles (e.g., trucks, trailers).</li>
+                                            <li>Idling.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div id="policy-fade" class="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none transition-opacity duration-300"></div>
+                            </div>
+
+                            <div class="mt-2 text-center relative z-10">
+                                <button onclick="togglePolicy()" class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#f8fafc] border border-[#E8EEFC] hover:bg-[#E8EEFC] text-[#002366] font-bold rounded-full transition-colors text-sm shadow-sm">
+                                    <span id="read-more-text">Read More</span>
+                                    <i data-lucide="chevron-down" id="read-more-icon" class="w-4 h-4 transition-transform duration-500"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 space-y-8">
+                    
+                    <div class="reveal right" data-delay="0">
+                        <div class="bg-[#002366] rounded-3xl p-8 shadow-md text-white">
+                            <div class="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                                <div class="w-10 h-10 rounded-xl bg-[#FFD700]/20 flex items-center justify-center text-[#FFD700]">
+                                    <i data-lucide="contact" class="w-5 h-5"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-[#FFD700]">Contact & Socials</h2>
+                            </div>
+
+                            <div class="space-y-4 mb-8">
+                                <div class="flex items-start gap-3 text-white/90">
+                                    <i data-lucide="phone" class="w-5 h-5 text-[#FFD700] mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p class="text-xs text-white/50 uppercase tracking-wider font-semibold">Contact Number</p>
+                                        <p>(045) 961-3617</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 text-white/90">
+                                    <i data-lucide="mail" class="w-5 h-5 text-[#FFD700] mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p class="text-xs text-white/50 uppercase tracking-wider font-semibold">Email</p>
+                                        <a href="mailto:iero@ua.edu.ph" class="hover:text-[#FFD700] transition-colors">iero@ua.edu.ph</a>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 text-white/90">
+                                    <i data-lucide="map-pin" class="w-5 h-5 text-[#FFD700] mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p class="text-xs text-white/50 uppercase tracking-wider font-semibold">Address</p>
+                                        <p class="leading-snug">Unisite Subdivision, Del Pilar,<br>San Fernando, Philippines, 2000</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-xs text-white/50 uppercase tracking-wider font-semibold mb-3">Connect With Us</p>
+                                <div class="space-y-3">
+                                    <a href="https://www.facebook.com/universityoftheassumption" target="_blank" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 p-3 rounded-xl transition-all group">
+                                        <svg class="w-5 h-5 text-[#FFD700] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                                        <span class="text-sm font-medium">@universityoftheassumption</span>
+                                    </a>
+
+                                    <a href="https://www.youtube.com/@UniversityoftheAssumptionPamp" target="_blank" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 p-3 rounded-xl transition-all group">
+                                        <svg class="w-5 h-5 text-[#FFD700] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                                        <span class="text-sm font-medium">@UniversityoftheAssumptionPamp</span>
+                                    </a>
+
+                                    <a href="https://www.tiktok.com/@_uamedia" target="_blank" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 p-3 rounded-xl transition-all group">
+                                        <svg class="w-5 h-5 text-[#FFD700] group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+                                        <span class="text-sm font-medium">@_UAMEDIA</span>
+                                    </a>
+
+                                    <a href="https://www.instagram.com/uapampanga/?__d=1%2F" target="_blank" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 p-3 rounded-xl transition-all group">
+                                        <svg class="w-5 h-5 text-[#FFD700] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                                        <span class="text-sm font-medium">@uapampanga</span>
+                                    </a>
+
+                                    <a href="https://web.ua.edu.ph/" target="_blank" class="flex items-center gap-3 bg-white/5 hover:bg-white/10 p-3 rounded-xl transition-all group border border-[#FFD700]/30">
+                                        <svg class="w-5 h-5 text-[#FFD700] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                        <span class="text-sm font-medium">Main Website (ua.edu.ph)</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reveal right" data-delay="150">
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-[#E8EEFC]">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-[#002366]/10 flex items-center justify-center text-[#002366]">
+                                    <i data-lucide="map" class="w-5 h-5"></i>
+                                </div>
+                                <h2 class="text-xl font-bold text-[#002366]">Physical Address</h2>
+                            </div>
+                            
+                            <div class="rounded-2xl overflow-hidden border border-[#E8EEFC] shadow-inner bg-gray-100">
+                                <iframe 
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3852.128766160535!2d120.6971462!3d15.0371267!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3396f700078bfa79%3A0xcb13e9a116dfa9ea!2sUniversity%20of%20the%20Assumption!5e0!3m2!1sen!2sph!4v1714136294711!5m2!1sen!2sph" 
+                                    width="100%" 
+                                    height="320" 
+                                    style="border:0;" 
+                                    allowfullscreen="" 
+                                    loading="lazy" 
+                                    referrerpolicy="no-referrer-when-downgrade">
+                                </iframe>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="animated-footer" id="animatedFooter">
+        <div id="stars-container"></div>
+        <div class="celestial-body" id="celestial-body"></div>
+        <div id="clouds-container"></div>
+        <div class="cityscape" id="cityscape"></div>
+        <div class="footer-content">
+            <div class="footer-left">
+                <h3>UA PARKING</h3>
+                <p>Campus Vehicle Management System</p>
+            </div>
+            <div class="footer-right">
+                <a href="#">Help & Support</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+        <div id="cars-container"></div>
+        <div class="road">
+            <div class="road-line"></div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 UNIVERSITY OF THE ASSUMPTION.
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // --- HARDCODED DAY/NIGHT LOGIC ---
+        let isNightMode = false;
+        const topBar = document.getElementById('top-bar');
+        const bottomNav = document.getElementById('bottom-nav');
+        const bottomNavMobile = document.getElementById('bottom-nav-mobile');
+        const middleBanner = document.getElementById('middle-banner');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeToggleBtnMobile = document.getElementById('theme-toggle-btn-mobile');
+        const themeIconMobile = document.getElementById('theme-icon-mobile');
+        const themeTextMobile = document.getElementById('theme-text-mobile');
+        const footer = document.getElementById('animatedFooter');
+
+        function applyThemeStyles() {
+            document.body.classList.toggle('night-mode', isNightMode);
+            footer.classList.toggle('night-mode', isNightMode);
+
+            if (isNightMode) {
+                topBar.classList.replace('bg-[#002366]', 'bg-black');
+                middleBanner.style.backgroundImage = "url('banner-night.png')";
+                middleBanner.classList.replace('bg-day-fallback', 'bg-night-fallback');
+                bottomNav.classList.replace('bg-[#002366]', 'bg-black');
+                bottomNavMobile.classList.replace('bg-[#001446]', 'bg-black');
+                themeIcon.setAttribute('data-lucide', 'moon');
+                themeIconMobile.setAttribute('data-lucide', 'moon');
+                themeTextMobile.textContent = "Switch to Day Mode";
+                
+                // Target the fade container for night mode
+                document.getElementById('policy-fade').classList.replace('from-white', 'from-[#1a2235]');
+                document.getElementById('policy-fade').classList.replace('via-white/80', 'via-[#1a2235]/80');
+            } else {
+                topBar.classList.replace('bg-black', 'bg-[#002366]');
+                middleBanner.style.backgroundImage = "url('banner-day.png')";
+                middleBanner.classList.replace('bg-night-fallback', 'bg-day-fallback');
+                bottomNav.classList.replace('bg-black', 'bg-[#002366]');
+                bottomNavMobile.classList.replace('bg-black', 'bg-[#001446]');
+                themeIcon.setAttribute('data-lucide', 'sun');
+                themeIconMobile.setAttribute('data-lucide', 'sun');
+                themeTextMobile.textContent = "Switch to Night Mode";
+
+                // Target the fade container for day mode
+                document.getElementById('policy-fade').classList.replace('from-[#1a2235]', 'from-white');
+                document.getElementById('policy-fade').classList.replace('via-[#1a2235]/80', 'via-white/80');
+            }
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            isNightMode = !isNightMode;
+            localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
+            applyThemeStyles();
+        }
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtnMobile.addEventListener('click', toggleTheme);
+
+        // Load saved theme from localStorage
+        const savedTheme = localStorage.getItem('themeMode') || 'day';
+        isNightMode = savedTheme === 'night';
+        applyThemeStyles();
+
+
+        // --- Toggle Read More logic for Policy Section ---
+        function togglePolicy() {
+            const container = document.getElementById('policy-container');
+            const fade = document.getElementById('policy-fade');
+            const btnText = document.getElementById('read-more-text');
+            const icon = document.getElementById('read-more-icon');
+
+            if (container.classList.contains('max-h-64')) {
+                // Expand the container
+                container.classList.remove('max-h-64');
+                container.classList.add('max-h-[3000px]'); // Expands fully
+                fade.classList.add('opacity-0'); // Hide the gradient fade
+                btnText.textContent = 'Close'; // Change text
+                icon.classList.add('rotate-180'); // Flip the arrow up
+            } else {
+                // Collapse the container
+                container.classList.add('max-h-64');
+                container.classList.remove('max-h-[3000px]');
+                fade.classList.remove('opacity-0'); // Show gradient fade
+                btnText.textContent = 'Read More'; // Revert text
+                icon.classList.remove('rotate-180'); // Flip arrow down
+                
+                // Optional: Smoothly scroll back to the top of the section when closing
+                document.getElementById('policy-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+
+        // --- BODY LOGIC (Scroll Reveal & Counters) ---
+        document.addEventListener("DOMContentLoaded", () => {
+            // Load user info from localStorage
+            const userRole = localStorage.getItem('userRole') || 'Driver';
+            const currentUser = localStorage.getItem('username') || localStorage.getItem('currentUser') || 'User';
+            const roleCapitalized = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+            if (currentUser) {
+                document.getElementById('driver-name-header').textContent = `Welcome ${roleCapitalized}, ${currentUser}`;
+            }
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15
+            };
+
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        const delay = parseInt(el.getAttribute('data-delay')) || 0;
+                        
+                        setTimeout(() => {
+                            el.classList.add('is-visible');
+                        }, delay);
+                        
+                        observer.unobserve(el);
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.reveal').forEach(el => {
+                revealObserver.observe(el);
+            });
+        });
+
+
+        // --- FOOTER LOGIC (Animations) ---
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 40; i++) {
+            let star = document.createElement('div');
+            star.classList.add('star');
+            let size = Math.random() * 2;
+            star.style.width = `${size}px`; star.style.height = `${size}px`;
+            star.style.left = `${Math.random() * 100}%`; star.style.top = `${Math.random() * 120}px`;
+            star.style.setProperty('--star-opacity', Math.random() * 0.8 + 0.1);
+            starsContainer.appendChild(star);
+        }
+
+        const cityscape = document.getElementById('cityscape');
+        const numBuildings = Math.floor(window.innerWidth / 30); 
+        for (let i = 0; i < numBuildings; i++) {
+            let building = document.createElement('div'); building.classList.add('building');
+            let width = Math.random() * 35 + 25; let height = Math.random() * 70 + 20; 
+            building.style.width = `${width}px`; building.style.height = `${height}px`;
+            const windowSize = 4; const gap = 4; const padding = 5; 
+            const cols = Math.floor((width - (padding * 2) + gap) / (windowSize + gap));
+            const rows = Math.floor((height - (padding * 2) + gap) / (windowSize + gap));
+            for (let r = 0; r < rows; r++) { 
+                for (let c = 0; c < cols; c++) {
+                    if (Math.random() > 0.65) {
+                        let win = document.createElement('div'); win.classList.add('window');
+                        win.style.width = `${windowSize}px`; win.style.height = `${windowSize}px`;
+                        win.style.left = `${padding + c * (windowSize + gap)}px`; win.style.top = `${padding + r * (windowSize + gap)}px`;
+                        building.appendChild(win);
+                    }
+                }
+            }
+            cityscape.appendChild(building);
+        }
+
+        const cloudsContainer = document.getElementById('clouds-container');
+        const clouds = [];
+        for (let i = 0; i < 4; i++) {
+            let cloud = document.createElement('div'); cloud.classList.add('cloud');
+            let width = Math.random() * 50 + 70; let height = width / 3;
+            let top = Math.random() * 40 + 5; let speed = Math.random() * 0.3 + 0.1;
+            let xPos = Math.random() * window.innerWidth;
+            cloud.style.width = `${width}px`; cloud.style.height = `${height}px`; cloud.style.top = `${top}px`;
+            cloudsContainer.appendChild(cloud);
+            clouds.push({ element: cloud, x: xPos, speed: speed });
+        }
+
+        const carsContainer = document.getElementById('cars-container');
+        const cars = [];
+        for (let i = 0; i < 3; i++) { 
+            let car = document.createElement('div'); car.classList.add('car');
+            let speed = Math.random() * 1.5 + 1.2; let xPos = Math.random() * window.innerWidth;
+            carsContainer.appendChild(car);
+            cars.push({ element: car, x: xPos, speed: speed });
+        }
+
+        function animateFooter() {
+            clouds.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 150) { c.x = -150; c.element.style.top = `${Math.random() * 40 + 5}px`; }
+                c.element.style.left = `${c.x}px`;
+            });
+            cars.forEach(c => {
+                c.x += c.speed;
+                if (c.x > window.innerWidth + 60) { c.x = -60; } 
+                c.element.style.left = `${c.x}px`;
+            });
+            requestAnimationFrame(animateFooter);
+        }
+        animateFooter();
+    </script>
+</body>
+</html>
