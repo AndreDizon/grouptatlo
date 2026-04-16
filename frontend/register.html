@@ -161,10 +161,11 @@
                 });
 
                 if (response.ok) {
-                    return { success: true, backend: true };
+                    const data = await response.json();
+                    return { success: true, backend: true, user_id: data.id, userId: data.id };
                 } else {
                     const data = await response.json();
-                    const errorMsg = data.username?.[0] || data.password?.[0] || 'Registration failed';
+                    const errorMsg = data.username?.[0] || data.password?.[0] || data.error || 'Registration failed';
                     throw new Error(errorMsg);
                 }
             } catch (error) {
@@ -182,7 +183,7 @@
                 };
 
                 localStorage.setItem('registeredUsers', JSON.stringify(users));
-                return { success: true, backend: false };
+                return { success: true, backend: false, user_id: null };
             }
         }
 
@@ -218,11 +219,12 @@
             setLoading(true);
 
             try {
-                await registerUser(username, password);
+                const result = await registerUser(username, password);
                 
                 // Store registration data temporarily
                 sessionStorage.setItem('newUser', JSON.stringify({
                     username: username,
+                    user_id: result.user_id,
                     role: 'driver', // Default role for new registration
                     registered_at: new Date().toISOString()
                 }));

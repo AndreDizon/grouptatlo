@@ -76,14 +76,6 @@
 
     <script>
         const API_BASE_URL = 'http://localhost:8000/api';
-        const TEST_ACCOUNTS = {
-            'root': { password: 'root12345', role: 'admin', redirect: 'admin-home-page.html' },
-            'admin': { password: 'admin123', role: 'admin', redirect: 'admin-home-page.html' },
-            'driver1': { password: 'password123', role: 'driver', redirect: 'driver-home-page.html' },
-            'driver2': { password: 'password123', role: 'driver', redirect: 'driver-home-page.html' },
-            'guard1': { password: 'password123', role: 'guard', redirect: 'guard-home-page.html' },
-            'guard2': { password: 'password123', role: 'guard', redirect: 'guard-home-page.html' }
-        };
 
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
@@ -113,7 +105,7 @@
 
         async function authenticateWithBackend(username, password) {
             try {
-                // Try to authenticate with Django backend
+                // Authenticate with Django backend
                 const response = await fetch(`${API_BASE_URL}/auth/login/`, {
                     method: 'POST',
                     headers: {
@@ -127,8 +119,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    // Store token and user info
-                    localStorage.setItem('authToken', data.token || '');
+                    // Store user info
                     localStorage.setItem('userId', data.id);
                     localStorage.setItem('username', username);
                     localStorage.setItem('userRole', data.role || 'driver');
@@ -143,28 +134,14 @@
                         window.location.href = 'driver-home-page.html';
                     }
                 } else {
-                    // Fallback to test account for development
-                    authenticateWithTestAccount(username, password);
+                    const errorData = await response.json();
+                    const errorMsg = errorData.error || 'Invalid username or password';
+                    showError(errorMsg);
+                    setLoading(false);
                 }
             } catch (error) {
-                console.log('Backend unreachable, using test accounts...');
-                authenticateWithTestAccount(username, password);
-            }
-        }
-
-        function authenticateWithTestAccount(username, password) {
-            const account = TEST_ACCOUNTS[username.toLowerCase()];
-            
-            if (account && account.password === password) {
-                // Store credentials for testing
-                localStorage.setItem('username', username);
-                localStorage.setItem('userRole', account.role);
-                localStorage.setItem('isTestMode', 'true');
-                
-                // Redirect to appropriate dashboard
-                window.location.href = account.redirect;
-            } else {
-                showError('Invalid username or password. Please try again.');
+                console.error('Backend authentication error:', error);
+                showError('Connection error. Please check your internet and try again.');
                 setLoading(false);
             }
         }

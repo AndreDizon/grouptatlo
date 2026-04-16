@@ -66,6 +66,49 @@ def login_view(request):
         )
 
 
+@api_view(['POST'])
+def register_view(request):
+    """
+    Registration endpoint to create new driver users.
+    Expected POST data: { "username": "...", "password": "..." }
+    Returns: { "id": ..., "username": "...", "role": "driver" }
+    """
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    if not username or not password:
+        return Response(
+            {'error': 'Username and password are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Check if username already exists
+    if User.objects.filter(username=username).exists():
+        return Response(
+            {'error': 'Username already taken'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Create new user with driver role (is_staff=False, is_superuser=False)
+    try:
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            is_staff=False,
+            is_superuser=False
+        )
+        
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'role': 'driver',
+            'message': 'User registered successfully'
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):

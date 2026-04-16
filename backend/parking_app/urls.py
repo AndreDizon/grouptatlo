@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet, VehicleViewSet, ParkingPassViewSet,
     ParkingSessionViewSet, ParkingLotViewSet, ParkingRateViewSet,
-    AnnouncementViewSet, ScanLogViewSet, login_view
+    AnnouncementViewSet, ScanLogViewSet, login_view, register_view
 )
 
 router = DefaultRouter()
@@ -18,5 +18,6 @@ router.register(r'scan-logs', ScanLogViewSet, basename='scan-log')
 
 urlpatterns = [
     path('auth/login/', login_view, name='auth-login'),
+    path('auth/register/', register_view, name='auth-register'),
     path('', include(router.urls)),
 ]

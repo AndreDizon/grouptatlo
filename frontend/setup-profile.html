@@ -115,6 +115,8 @@
             if (data) {
                 newUserData = JSON.parse(data);
                 displayUsername.value = newUserData.username;
+                // Store userId in window for later use
+                window.newUserId = newUserData.user_id;
             } else {
                 // Fallback if accessed directly
                 errorMessage.textContent = 'Invalid session. Please register first.';
@@ -207,7 +209,42 @@
             setLoading(true);
 
             try {
+                // Prepare profile data
+                const names = fullName.split(' ');
+                const firstName = names[0];
+                const lastName = names.slice(1).join(' ') || names[0];
+
                 const profileData = {
+                    username: newUserData.username,
+                    email: email,
+                    first_name: firstName,
+                    last_name: lastName
+                };
+
+                // Update user in backend via API (if user_id exists)
+                if (window.newUserId) {
+                    try {
+                        const updateResponse = await fetch(`${API_BASE_URL}/users/${window.newUserId}/`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(profileData)
+                        });
+
+                        if (updateResponse.ok) {
+                            console.log('Profile updated in backend successfully');
+                        } else {
+                            console.log('Backend profile update failed, continuing with local save...');
+                        }
+                    } catch (updateError) {
+                        console.log('Backend unavailable for profile update, saving locally...');
+                    }
+                }
+
+                // Save additional profile data to localStorage (phone, address, user_type)
+                const userProfiles = JSON.parse(localStorage.getItem('userProfiles') || '{}');
+                userProfiles[newUserData.username] = {
                     username: newUserData.username,
                     full_name: fullName,
                     user_type: userType,
@@ -216,15 +253,13 @@
                     address: address,
                     created_at: new Date().toISOString()
                 };
-
-                // Save to localStorage
-                const userProfiles = JSON.parse(localStorage.getItem('userProfiles') || '{}');
-                userProfiles[newUserData.username] = profileData;
                 localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
 
-                // Mark user as having completed setup
+                // Store user info for dashboard
                 localStorage.setItem('currentUser', newUserData.username);
                 localStorage.setItem('userRole', 'driver');
+                localStorage.setItem('username', newUserData.username);
+                localStorage.setItem('userEmail', email);
                 
                 // Clear session data
                 sessionStorage.removeItem('newUser');

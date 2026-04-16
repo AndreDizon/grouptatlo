@@ -303,15 +303,19 @@
                     if (s.time_in) {
                         const inDate = new Date(s.time_in);
                         // Get only hour (e.g., "3 AM", "2 PM")
-                        const inHour = inDate.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }).split(':')[0] + ' ' + 
-                                      inDate.toLocaleTimeString('en-US', { hour12: true }).split(' ')[1];
+                        const hour = inDate.getHours();
+                        const display12Hour = hour % 12 || 12;
+                        const period = hour >= 12 ? 'PM' : 'AM';
+                        const inHour = `${display12Hour} ${period}`;
                         timeInHours[inHour] = (timeInHours[inHour] || 0) + 1;
                     }
                     if (s.time_out) {
                         const outDate = new Date(s.time_out);
                         // Get only hour (e.g., "3 AM", "2 PM")
-                        const outHour = outDate.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }).split(':')[0] + ' ' + 
-                                       outDate.toLocaleTimeString('en-US', { hour12: true }).split(' ')[1];
+                        const hour = outDate.getHours();
+                        const display12Hour = hour % 12 || 12;
+                        const period = hour >= 12 ? 'PM' : 'AM';
+                        const outHour = `${display12Hour} ${period}`;
                         timeOutHours[outHour] = (timeOutHours[outHour] || 0) + 1;
                     }
                 });
