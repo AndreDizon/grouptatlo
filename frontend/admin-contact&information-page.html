@@ -128,15 +128,17 @@
         #policy-section, #contact-socials-section {
             transition: all 0.5s ease;
         }
-        #policy-section:target, #contact-socials-section:target {
-            background-color: rgba(255, 215, 0, 0.15);
+        
+        #policy-section.section-highlighted, #contact-socials-section.section-highlighted {
+            background-color: rgba(255, 215, 0, 0.2) !important;
             padding: 16px;
             border-radius: 8px;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
         }
-        body.night-mode #policy-section:target, body.night-mode #contact-socials-section:target {
-            background-color: rgba(255, 215, 0, 0.1);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        
+        body.night-mode #policy-section.section-highlighted, body.night-mode #contact-socials-section.section-highlighted {
+            background-color: rgba(255, 215, 0, 0.15) !important;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
         }
         
         @keyframes highlightPulse {
@@ -600,11 +602,25 @@
             function highlightSection(sectionId) {
                 const section = document.getElementById(sectionId);
                 if (section) {
-                    section.classList.add('section-highlight');
+                    // Remove existing highlight class from all sections
+                    document.querySelectorAll('#policy-section, #contact-socials-section').forEach(el => {
+                        el.classList.remove('section-highlighted', 'section-highlight');
+                    });
+                    
+                    // Add highlight classes to the target section
+                    section.classList.add('section-highlighted', 'section-highlight');
+                    
+                    // Scroll into view
                     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // Keep highlight for 3 seconds
                     setTimeout(() => {
                         section.classList.remove('section-highlight');
                     }, 1500);
+                    
+                    setTimeout(() => {
+                        section.classList.remove('section-highlighted');
+                    }, 3000);
                 }
             }
 
@@ -624,7 +640,9 @@
                     if (sectionId) {
                         e.preventDefault();
                         window.location.hash = sectionId;
-                        highlightSection(sectionId);
+                        setTimeout(() => {
+                            highlightSection(sectionId);
+                        }, 100);
                     }
                 });
             });
