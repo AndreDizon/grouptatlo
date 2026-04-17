@@ -10,13 +10,13 @@ from django.utils import timezone
 from datetime import timedelta, date, datetime
 
 from .models import (
-    Vehicle, ParkingPass, ParkingSession,
-    ParkingLot, ParkingRate, Announcement, ScanLog
+    Vehicle, ParkingSession,
+    ParkingLot, ParkingRate, ScanLog
 )
 from .serializers import (
-    VehicleSerializer, ParkingPassSerializer,
+    VehicleSerializer,
     ParkingSessionSerializer, ParkingLotSerializer, ParkingRateSerializer,
-    AnnouncementSerializer, ScanLogSerializer, UserSerializer
+    ScanLogSerializer, UserSerializer
 )
 
 
@@ -258,21 +258,6 @@ class ParkingRateViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
 
-class ParkingPassViewSet(viewsets.ModelViewSet):
-    serializer_class = ParkingPassSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        # If user is authenticated and staff, return all passes
-        if self.request.user.is_authenticated and self.request.user.is_staff:
-            return ParkingPass.objects.all()
-        # If user is authenticated but not staff, return only their passes
-        if self.request.user.is_authenticated:
-            return ParkingPass.objects.filter(vehicle__owner=self.request.user)
-        # If user is not authenticated, return all passes (since permission_classes = [AllowAny])
-        return ParkingPass.objects.all()
-
-
 class ParkingSessionViewSet(viewsets.ModelViewSet):
     serializer_class = ParkingSessionSerializer
     permission_classes = [AllowAny]
@@ -356,17 +341,84 @@ class ParkingSessionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    @action(detail=False, methods=['get'])
+    def driver_statistics(self, request):
+        """Get driver parking statistics for a specific date"""
+        user_id = request.query_params.get('user_id')
+        target_date_str = request.query_params.get('date')  # Format: YYYY-MM-DD
+        
+        if not user_id:
+            return Response(
+                {'error': 'user_id parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user_id = int(user_id)
+            today = date.today()
+            
+            # If a specific date is provided, use it; otherwise use today
+            if target_date_str:
+                try:
+                    target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    return Response(
+                        {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                target_date = today
+            
+            # Get date range for the entire day
+            start_date = timezone.make_aware(datetime.combine(target_date, datetime.min.time()))
+            end_date = timezone.make_aware(datetime.combine(target_date, datetime.max.time()))
+            
+            # Get all vehicles for the user
+            user_vehicles = Vehicle.objects.filter(owner_id=user_id)
+            user_vehicle_ids = user_vehicles.values_list('id', flat=True)
+            
+            # Filter sessions for the user's vehicles on the target date
+            sessions = ParkingSession.objects.filter(
+                vehicle_id__in=user_vehicle_ids,
+                time_in__gte=start_date,
+                time_in__lte=end_date
+            )
+            
+            # Calculate statistics
+            total_sessions = sessions.count()
+            completed_sessions = sessions.filter(time_out__isnull=False).count()
+            active_sessions = sessions.filter(time_out__isnull=True).count()
+            
+            # Calculate total duration
+            total_duration_hours = 0
+            for session in sessions:
+                if session.time_out:
+                    duration = (session.time_out - session.time_in).total_seconds() / 3600
+                    total_duration_hours += duration
+            
+            return Response({
+                'total_sessions': total_sessions,
+                'completed_sessions': completed_sessions,
+                'active_sessions': active_sessions,
+                'total_duration_hours': round(total_duration_hours, 2),
+                'date': target_date_str or target_date.isoformat(),
+                'date_range': {
+                    'start': start_date.isoformat(),
+                    'end': end_date.isoformat()
+                }
+            }, status=status.HTTP_200_OK)
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'Invalid user_id'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class ParkingLotViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ParkingLot.objects.filter(is_active=True)
     serializer_class = ParkingLotSerializer
     permission_classes = [AllowAny]
 
-
-class AnnouncementViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Announcement.objects.filter(is_active=True)
-    serializer_class = AnnouncementSerializer
-    permission_classes = [AllowAny]
 
 
 class ScanLogViewSet(viewsets.ModelViewSet):
@@ -480,9 +532,10 @@ class ScanLogViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def guard_statistics(self, request):
-        """Get scan statistics for a specific guard by date range"""
+        """Get scan statistics for a specific guard by specific date or date range"""
         guard_id = request.query_params.get('guard_id')
-        filter_type = request.query_params.get('filter', 'day')  # day, week, month, year
+        target_date_str = request.query_params.get('date')  # Format: YYYY-MM-DD for specific day
+        filter_type = request.query_params.get('filter', 'day')  # Fallback: day, week, month, year
         
         if not guard_id:
             return Response(
@@ -492,27 +545,41 @@ class ScanLogViewSet(viewsets.ModelViewSet):
         
         try:
             guard_id = int(guard_id)
-            
-            # Calculate date range
             today = date.today()
-            if filter_type == 'day':
-                start_date = timezone.make_aware(datetime.combine(today, datetime.min.time()))
-                end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
-            elif filter_type == 'week':
-                # Get 7 days back
-                start_date = timezone.make_aware(datetime.combine(today - timedelta(days=7), datetime.min.time()))
-                end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
-            elif filter_type == 'month':
-                # Get all from this month
-                start_date = timezone.make_aware(datetime.combine(today.replace(day=1), datetime.min.time()))
-                end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
-            elif filter_type == 'year':
-                # Get all from this year
-                start_date = timezone.make_aware(datetime.combine(today.replace(month=1, day=1), datetime.min.time()))
-                end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+            
+            # If a specific date is provided, use it; otherwise use filter_type
+            if target_date_str:
+                try:
+                    target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    return Response(
+                        {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                start_date = timezone.make_aware(datetime.combine(target_date, datetime.min.time()))
+                end_date = timezone.make_aware(datetime.combine(target_date, datetime.max.time()))
+                filter_label = target_date_str
             else:
-                start_date = timezone.make_aware(datetime.combine(today, datetime.min.time()))
-                end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+                # Calculate date range based on filter_type
+                if filter_type == 'day':
+                    start_date = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+                    end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+                elif filter_type == 'week':
+                    # Get 7 days back
+                    start_date = timezone.make_aware(datetime.combine(today - timedelta(days=7), datetime.min.time()))
+                    end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+                elif filter_type == 'month':
+                    # Get all from this month
+                    start_date = timezone.make_aware(datetime.combine(today.replace(day=1), datetime.min.time()))
+                    end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+                elif filter_type == 'year':
+                    # Get all from this year
+                    start_date = timezone.make_aware(datetime.combine(today.replace(month=1, day=1), datetime.min.time()))
+                    end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+                else:
+                    start_date = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+                    end_date = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+                filter_label = filter_type
             
             # Filter scan logs by guard and date range
             scan_logs = ScanLog.objects.filter(
@@ -535,7 +602,7 @@ class ScanLogViewSet(viewsets.ModelViewSet):
                 'date_range': {
                     'start': start_date.isoformat(),
                     'end': end_date.isoformat(),
-                    'filter': filter_type
+                    'filter': filter_label
                 }
             }, status=status.HTTP_200_OK)
         except (ValueError, TypeError):

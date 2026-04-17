@@ -29,7 +29,7 @@ PASS_TYPES = [
 class Vehicle(models.Model):
     """Vehicle registration model"""
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vehicles')
-    vehicle_type = models.CharField(max_length=20, choices=VEHICLE_TYPES)
+    vehicle_type = models.CharField(max_length=100)
     brand = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
     plate_number = models.CharField(max_length=20, unique=True)
@@ -65,24 +65,6 @@ class Vehicle(models.Model):
 
     class Meta:
         ordering = ['-registration_date']
-
-
-class ParkingPass(models.Model):
-    """Parking pass/sticker model"""
-    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='passes')
-    pass_type = models.CharField(max_length=20, choices=PASS_TYPES)
-    pass_number = models.CharField(max_length=50, unique=True)
-    issue_date = models.DateField(auto_now_add=True)
-    expiry_date = models.DateField()
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    is_active = models.BooleanField(default=True)
-    payment_receipt = models.FileField(upload_to='receipts/', null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.pass_number} - {self.vehicle.plate_number}"
-
-    class Meta:
-        ordering = ['-issue_date']
 
 
 class ParkingLot(models.Model):
@@ -152,20 +134,7 @@ class ParkingRate(models.Model):
         verbose_name_plural = "Parking Rates"
 
 
-class Announcement(models.Model):
-    """System announcements and notifications"""
-    title = models.CharField(max_length=200)
-    content = models.TextField()
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
 
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        ordering = ['-created_at']
 
 
 class ScanLog(models.Model):

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
-    Vehicle, ParkingPass, ParkingSession,
-    ParkingLot, ParkingRate, Announcement, ScanLog
+    Vehicle, ParkingSession,
+    ParkingLot, ParkingRate, ScanLog
 )
 
 
@@ -11,14 +11,6 @@ class VehicleAdmin(admin.ModelAdmin):
     list_filter = ['vehicle_type', 'is_registered', 'registration_date']
     search_fields = ['plate_number', 'brand', 'model', 'owner__first_name']
     readonly_fields = ['registration_date']
-
-
-@admin.register(ParkingPass)
-class ParkingPassAdmin(admin.ModelAdmin):
-    list_display = ['pass_number', 'vehicle', 'pass_type', 'expiry_date', 'is_active']
-    list_filter = ['pass_type', 'is_active', 'issue_date', 'expiry_date']
-    search_fields = ['pass_number', 'vehicle__plate_number']
-    readonly_fields = ['issue_date']
 
 
 @admin.register(ParkingSession)
@@ -42,14 +34,6 @@ class ParkingRateAdmin(admin.ModelAdmin):
     list_display = ['vehicle_type', 'pass_type', 'price', 'is_active']
     list_filter = ['vehicle_type', 'pass_type', 'is_active']
     search_fields = ['vehicle_type', 'pass_type']
-
-
-@admin.register(Announcement)
-class AnnouncementAdmin(admin.ModelAdmin):
-    list_display = ['title', 'created_by', 'created_at', 'expires_at', 'is_active']
-    list_filter = ['is_active', 'created_at', 'expires_at']
-    search_fields = ['title', 'content']
-    readonly_fields = ['created_at']
 
 
 @admin.register(ScanLog)

@@ -123,6 +123,31 @@
         .animated-footer.night-mode .footer-right a:hover { color: #ffffff; }
         .footer-bottom { position: absolute; bottom: 12px; width: 100%; text-align: center; z-index: 10; font-size: 0.75rem; color: #777; letter-spacing: 1px; transition: color 0.5s ease; }
         .animated-footer.night-mode .footer-bottom { color: #5d6d85; }
+        
+        /* Section Highlighting */
+        #policy-section, #contact-socials-section {
+            transition: all 0.5s ease;
+        }
+        #policy-section:target, #contact-socials-section:target {
+            background-color: rgba(255, 215, 0, 0.15);
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        body.night-mode #policy-section:target, body.night-mode #contact-socials-section:target {
+            background-color: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        
+        @keyframes highlightPulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+        
+        .section-highlight {
+            animation: highlightPulse 1.5s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -238,7 +263,7 @@
                                 <div class="w-10 h-10 rounded-full bg-[#002366]/10 flex items-center justify-center text-[#002366]">
                                     <i data-lucide="scale" class="w-5 h-5"></i>
                                 </div>
-                                <h2 class="text-2xl font-bold text-[#002366]">General Policy on Parking Lot Use</h2>
+                                <h2 class="text-2xl font-bold text-[#002366]" id="policy-section">General Policy on Parking Lot Use</h2>
                             </div>
 
                             <p class="text-[#5A6EA0] mb-6 text-sm leading-relaxed">
@@ -333,7 +358,7 @@
                                 <div class="w-10 h-10 rounded-xl bg-[#FFD700]/20 flex items-center justify-center text-[#FFD700]">
                                     <i data-lucide="contact" class="w-5 h-5"></i>
                                 </div>
-                                <h2 class="text-2xl font-bold text-[#FFD700]">Contact & Socials</h2>
+                                <h2 class="text-2xl font-bold text-[#FFD700]" id="contact-socials-section">Contact & Socials</h2>
                             </div>
 
                             <div class="space-y-4 mb-8">
@@ -431,8 +456,8 @@
                 <p>Campus Vehicle Management System</p>
             </div>
             <div class="footer-right">
-                <a href="#">Help & Support</a>
-                <a href="#">Privacy Policy</a>
+                <a href="#contact-socials-section">Help & Support</a>
+                <a href="#policy-section">Policy</a>
             </div>
         </div>
         <div id="cars-container"></div>
@@ -570,6 +595,39 @@
 
             document.querySelectorAll('.reveal').forEach(el => {
                 revealObserver.observe(el);
+            });
+
+            // Handle section highlighting on page load and navigation
+            function highlightSection(sectionId) {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.classList.add('section-highlight');
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => {
+                        section.classList.remove('section-highlight');
+                    }, 1500);
+                }
+            }
+
+            // Check if there's a hash on page load
+            if (window.location.hash) {
+                const sectionId = window.location.hash.substring(1);
+                setTimeout(() => {
+                    highlightSection(sectionId);
+                }, 500);
+            }
+
+            // Add event listeners to footer links
+            document.querySelectorAll('a[href*="#policy-section"], a[href*="#contact-socials-section"]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    const sectionId = href.includes('#') ? href.split('#')[1] : null;
+                    if (sectionId) {
+                        e.preventDefault();
+                        window.location.hash = sectionId;
+                        highlightSection(sectionId);
+                    }
+                });
             });
         });
 

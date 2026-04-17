@@ -211,12 +211,10 @@
                     <i data-lucide="user-check" class="w-5 h-5 text-[#FFD700]"></i> 
                     My Scanning Log Statistics
                 </h2>
-                <select id="guard-scan-filter" class="filter-select text-gray-600 focus:border-[#002366] transition-colors duration-300">
-                    <option value="day" selected>Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="year">This Year</option>
-                </select>
+                <div class="flex items-center gap-2">
+                    <label for="guard-scan-date" class="text-sm font-semibold text-gray-600 transition-colors duration-300">Select Date:</label>
+                    <input type="date" id="guard-scan-date" class="filter-select text-gray-600 focus:border-[#002366] transition-colors duration-300">
+                </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -255,8 +253,8 @@
                 <p>Campus Vehicle Management System</p>
             </div>
             <div class="footer-right">
-                <a href="#">Help & Support</a>
-                <a href="#">Privacy Policy</a>
+                <a href="guard-contact&information-page.html#contact-socials-section">Help & Support</a>
+                <a href="guard-contact&information-page.html#policy-section">Policy</a>
             </div>
         </div>
         <div id="cars-container"></div>
@@ -272,7 +270,7 @@
         lucide.createIcons();
 
         // API Configuration
-        const API_BASE_URL = 'http://localhost:8000/api';
+        const API_BASE_URL = 'http://127.0.0.1:8000/api';
         
         // --- LOAD USER DATA ---
         function loadUserData() {
@@ -387,16 +385,20 @@
         }
 
         // --- LOAD GUARD SCANNING STATISTICS WITH DATE FILTER ---
-        async function loadGuardScanningStat(filterType = 'day') {
+        async function loadGuardScanningStat(dateString = null) {
             try {
                 const userId = localStorage.getItem('userId');
                 
                 if (!userId) throw new Error('No user ID found');
                 
-                // Call the new backend endpoint for guard statistics
-                const statsResponse = await fetch(
-                    `${API_BASE_URL}/scan-logs/guard_statistics/?guard_id=${userId}&filter=${filterType}`
-                );
+                // Build API URL with date parameter (or fallback to today if no date)
+                let apiUrl = `${API_BASE_URL}/scan-logs/guard_statistics/?guard_id=${userId}`;
+                if (dateString) {
+                    apiUrl += `&date=${dateString}`;
+                }
+                
+                // Call the backend endpoint for guard statistics
+                const statsResponse = await fetch(apiUrl);
                 
                 if (!statsResponse.ok) throw new Error('Failed to fetch guard statistics');
                 
@@ -476,12 +478,21 @@
         document.addEventListener("DOMContentLoaded", () => {
             loadUserData();
             loadParkingStatistics();
-            loadGuardScanningStat('day');
             
-            // Add event listener for guard scanning statistics filter
-            const guardFilter = document.getElementById('guard-scan-filter');
-            if (guardFilter) {
-                guardFilter.addEventListener('change', (e) => {
+            // Set date input to today's date
+            const dateInput = document.getElementById('guard-scan-date');
+            if (dateInput) {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                dateInput.value = `${yyyy}-${mm}-${dd}`;
+                
+                // Load statistics for today
+                loadGuardScanningStat(dateInput.value);
+                
+                // Add event listener for date change
+                dateInput.addEventListener('change', (e) => {
                     loadGuardScanningStat(e.target.value);
                 });
             }

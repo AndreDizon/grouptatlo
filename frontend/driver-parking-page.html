@@ -217,23 +217,27 @@
         <div class="reveal up bg-white rounded-xl shadow-sm border border-gray-200 p-6" data-delay="200">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h2 class="text-xl font-bold text-[#002366]">Personal Parking Statistics</h2>
+                <div class="flex items-center gap-2">
+                    <label for="driver-parking-date" class="text-sm font-semibold text-gray-600 transition-colors duration-300">Select Date:</label>
+                    <input type="date" id="driver-parking-date" class="filter-select text-gray-600 focus:border-[#002366] transition-colors duration-300">
+                </div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="reveal scale-up bg-gray-50 p-4 rounded-lg border border-gray-100 text-center" data-delay="250">
-                    <p class="text-sm text-gray-600 mb-1">My Registered Vehicle/s</p>
-                    <p id="my-registered-vehicles" class="text-2xl font-bold text-gray-800" data-value="0">0</p>
+                    <p class="text-sm text-gray-600 mb-1">Total Parking Sessions</p>
+                    <p id="total-parking-sessions" class="text-2xl font-bold text-gray-800" data-value="0">0</p>
                 </div>
                 <div class="reveal scale-up bg-gray-50 p-4 rounded-lg border border-gray-100 text-center" data-delay="350">
-                    <p class="text-sm text-gray-600 mb-1">My Paid Vehicle/s</p>
-                    <p id="my-paid-vehicles" class="text-2xl font-bold text-gray-800" data-value="0">0</p>
+                    <p class="text-sm text-gray-600 mb-1">Completed Sessions</p>
+                    <p id="completed-parking-sessions" class="text-2xl font-bold text-gray-800" data-value="0">0</p>
                 </div>
                 <div class="reveal scale-up bg-gray-50 p-4 rounded-lg border border-gray-100 text-center" data-delay="450">
                     <p class="text-sm text-gray-600 mb-1">Total Duration Parked</p>
-                    <p id="total-duration-parked" class="text-2xl font-bold text-gray-800">Loading...</p>
+                    <p id="total-duration-parked" class="text-2xl font-bold text-gray-800">0 hrs</p>
                 </div>
                 <div class="reveal scale-up bg-gray-50 p-4 rounded-lg border border-gray-100 text-center" data-delay="550">
-                    <p class="text-sm text-gray-600 mb-1">Active Car</p>
-                    <p id="active-car" class="text-lg font-bold text-gray-800">None</p>
+                    <p class="text-sm text-gray-600 mb-1">Active Sessions</p>
+                    <p id="active-parking-sessions" class="text-lg font-bold text-gray-800" data-value="0">0</p>
                 </div>
             </div>
         </div>
@@ -251,8 +255,8 @@
                 <p>Campus Vehicle Management System</p>
             </div>
             <div class="footer-right">
-                <a href="#">Help & Support</a>
-                <a href="#">Privacy Policy</a>
+                <a href="driver-contact&information-page.html#contact-socials-section">Help & Support</a>
+                <a href="driver-contact&information-page.html#policy-section">Policy</a>
             </div>
         </div>
         <div id="cars-container"></div>
@@ -268,7 +272,7 @@
         lucide.createIcons();
 
         // API Configuration
-        const API_BASE_URL = 'http://localhost:8000/api';
+        const API_BASE_URL = 'http://127.0.0.1:8000/api';
         
         // --- LOAD USER DATA ---
         function loadUserData() {
@@ -349,112 +353,83 @@
 
 
         // --- FETCH PERSONAL PARKING STATISTICS ---
-        async function loadPersonalStatistics() {
+        async function loadPersonalStatistics(dateString = null) {
             try {
-                const currentUser = localStorage.getItem('currentUser');
                 const userId = localStorage.getItem('userId');
                 
-                if (!userId) throw new Error('No user ID');
+                if (!userId) throw new Error('No user ID found');
+                
+                // Build API URL with date parameter
+                let apiUrl = `${API_BASE_URL}/parking-sessions/driver_statistics/?user_id=${userId}`;
+                if (dateString) {
+                    apiUrl += `&date=${dateString}`;
+                }
+                
+                const statsResponse = await fetch(apiUrl);
+                if (!statsResponse.ok) throw new Error('Failed to fetch personal statistics');
+                
+                const stats = await statsResponse.json();
+                
+                // Update stat cards
+                document.getElementById('total-parking-sessions').textContent = stats.total_sessions;
+                document.getElementById('total-parking-sessions').setAttribute('data-value', stats.total_sessions);
+                
+                document.getElementById('completed-parking-sessions').textContent = stats.completed_sessions;
+                document.getElementById('completed-parking-sessions').setAttribute('data-value', stats.completed_sessions);
+                
+                document.getElementById('total-duration-parked').textContent = stats.total_duration_hours + ' hrs';
+                
+                document.getElementById('active-parking-sessions').textContent = stats.active_sessions;
+                document.getElementById('active-parking-sessions').setAttribute('data-value', stats.active_sessions);
 
-                // Fetch user's vehicles using userId (same as vehicle page does)
-                const vehiclesResponse = await fetch(`${API_BASE_URL}/vehicles/?owner=${userId}`);
-                if (!vehiclesResponse.ok) throw new Error('Failed to fetch vehicles');
-                const vehiclesData = await vehiclesResponse.json();
-                const userVehicles = Array.isArray(vehiclesData) ? vehiclesData : vehiclesData.results || [];
-                
-                const userVehicleIds = userVehicles.map(v => v.id);
-                
-                // Count REGISTERED vehicles (is_registered = true)
-                const registeredVehicleCount = userVehicles.filter(v => v.is_registered === true).length;
-                
-                // Count PAID vehicles (is_paid = true) - based on admin blur/unblur feature
-                const paidVehicleCount = userVehicles.filter(v => v.is_paid === true).length;
+            } catch (error) {
+                console.error('Error loading personal parking statistics:', error);
+                // Reset to 0 on error
+                document.getElementById('total-parking-sessions').textContent = '0';
+                document.getElementById('completed-parking-sessions').textContent = '0';
+                document.getElementById('total-duration-parked').textContent = '0 hrs';
+                document.getElementById('active-parking-sessions').textContent = '0';
+            }
+        }
 
-                // Fetch all user's parking sessions (needed for total duration calculation)
-                const allSessionsRes = await fetch(`${API_BASE_URL}/parking-sessions/?owner=${userId}`);
-                if (!allSessionsRes.ok) throw new Error('Failed to fetch sessions');
-                const allSessions = await allSessionsRes.json();
-                const allSessionsList = Array.isArray(allSessions) ? allSessions : allSessions.results || [];
+        // --- LOAD TODAY'S TIME IN/OUT DATA ---
+        async function loadTodayTimeInOut() {
+            try {
+                const userId = localStorage.getItem('userId');
                 
-                // Fetch today's parking sessions using the dedicated endpoint
+                if (!userId) throw new Error('No user ID found');
+                
+                // Fetch today's parking sessions
                 const todaySessionsRes = await fetch(`${API_BASE_URL}/parking-sessions/today_sessions/?user_id=${userId}`);
                 if (!todaySessionsRes.ok) throw new Error('Failed to fetch today\'s sessions');
+                
                 const todaySessionsData = await todaySessionsRes.json();
                 const userSessionsToday = Array.isArray(todaySessionsData) ? todaySessionsData : todaySessionsData.results || [];
                 
-                // For filtering, use the already filtered today's sessions
-                const userSessions = allSessionsList.filter(s => userVehicleIds.includes(s.vehicle));
-
-                // Calculate total duration parked (sum of all parking durations in minutes)
-                let totalDurationMinutes = 0;
-                userSessions.forEach(session => {
-                    if (session.time_in && session.time_out) {
-                        const timeIn = new Date(session.time_in);
-                        const timeOut = new Date(session.time_out);
-                        const durationMinutes = (timeOut - timeIn) / (1000 * 60);
-                        totalDurationMinutes += durationMinutes;
-                    }
-                });
-
-                // Format total duration
-                let totalDurationFormatted = 'No data';
-                if (totalDurationMinutes > 0) {
-                    if (totalDurationMinutes < 60) {
-                        totalDurationFormatted = `${Math.round(totalDurationMinutes)} minutes`;
-                    } else {
-                        const hours = Math.floor(totalDurationMinutes / 60);
-                        const minutes = Math.round(totalDurationMinutes % 60);
-                        totalDurationFormatted = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-                    }
-                }
-
-                // Find active car (currently parked - has time_in but no time_out)
-                const activeCar = userSessions.find(s => s.time_in && !s.time_out);
-                let activeCarDisplay = 'None';
-                if (activeCar && activeCar.vehicle_info) {
-                    activeCarDisplay = activeCar.vehicle_info.plate_number || 'Active';
-                } else if (activeCar) {
-                    // Fetch vehicle details if not included in session
-                    const vehicleDetail = userVehicles.find(v => v.id === activeCar.vehicle);
-                    activeCarDisplay = vehicleDetail ? vehicleDetail.plate_number : 'Active';
-                }
-
-                // Get the LAST (most recent) session from today using the pre-fetched today's sessions
-                // userSessionsToday is already sorted by -time_in from the backend
-                const todaySession = userSessionsToday.length > 0 ? userSessionsToday[0] : null;
-                
-                if (todaySession && todaySession.time_in) {
-                    const timeInDate = new Date(todaySession.time_in);
-                    const timeInFormatted = timeInDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                    document.getElementById('time-in').textContent = timeInFormatted;
+                // Get the LAST (most recent) session from today
+                if (userSessionsToday.length > 0) {
+                    const todaySession = userSessionsToday[0];
                     
-                    if (todaySession.time_out) {
-                        const timeOutDate = new Date(todaySession.time_out);
-                        const timeOutFormatted = timeOutDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                        document.getElementById('time-out').textContent = timeOutFormatted;
-                    } else {
-                        document.getElementById('time-out').textContent = '-- : --';
+                    if (todaySession && todaySession.time_in) {
+                        const timeInDate = new Date(todaySession.time_in);
+                        const timeInFormatted = timeInDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        document.getElementById('time-in').textContent = timeInFormatted;
+                        
+                        if (todaySession.time_out) {
+                            const timeOutDate = new Date(todaySession.time_out);
+                            const timeOutFormatted = timeOutDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                            document.getElementById('time-out').textContent = timeOutFormatted;
+                        } else {
+                            document.getElementById('time-out').textContent = '-- : --';
+                        }
                     }
                 } else {
                     document.getElementById('time-in').textContent = 'N/A';
                     document.getElementById('time-out').textContent = '-- : --';
                 }
-
-                // Update Personal Parking Statistics
-                document.getElementById('my-registered-vehicles').textContent = registeredVehicleCount;
-                document.getElementById('my-registered-vehicles').setAttribute('data-value', registeredVehicleCount);
-                document.getElementById('my-paid-vehicles').textContent = paidVehicleCount;
-                document.getElementById('my-paid-vehicles').setAttribute('data-value', paidVehicleCount);
-                document.getElementById('total-duration-parked').textContent = totalDurationFormatted;
-                document.getElementById('active-car').textContent = activeCarDisplay;
-
+                
             } catch (error) {
-                console.error('Error loading personal parking statistics:', error);
-                // Show 0 values when backend unavailable
-                document.getElementById('my-registered-vehicles').textContent = '0';
-                document.getElementById('my-paid-vehicles').textContent = '0';
-                document.getElementById('total-duration-parked').textContent = 'N/A';
-                document.getElementById('active-car').textContent = 'None';
+                console.error('Error loading today\'s time in/out:', error);
                 document.getElementById('time-in').textContent = 'N/A';
                 document.getElementById('time-out').textContent = '-- : --';
             }
@@ -517,7 +492,25 @@
         document.addEventListener("DOMContentLoaded", () => {
             loadUserData();
             loadParkingStatistics();
-            loadPersonalStatistics();
+            loadTodayTimeInOut();
+            
+            // Set date input to today's date
+            const dateInput = document.getElementById('driver-parking-date');
+            if (dateInput) {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                dateInput.value = `${yyyy}-${mm}-${dd}`;
+                
+                // Load statistics for today
+                loadPersonalStatistics(dateInput.value);
+                
+                // Add event listener for date change
+                dateInput.addEventListener('change', (e) => {
+                    loadPersonalStatistics(e.target.value);
+                });
+            }
 
             const observer = new IntersectionObserver((entries, obs) => {
                 entries.forEach(entry => {

@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-    Vehicle, ParkingPass, ParkingSession,
-    ParkingLot, ParkingRate, Announcement, ScanLog
+    Vehicle, ParkingSession,
+    ParkingLot, ParkingRate, ScanLog
 )
 
 
@@ -51,17 +51,6 @@ class ParkingRateSerializer(serializers.ModelSerializer):
         fields = ['id', 'vehicle_type', 'pass_type', 'price', 'description', 'is_active']
 
 
-class ParkingPassSerializer(serializers.ModelSerializer):
-    vehicle_info = VehicleSerializer(source='vehicle', read_only=True)
-
-    class Meta:
-        model = ParkingPass
-        fields = [
-            'id', 'vehicle', 'vehicle_info', 'pass_type', 'pass_number',
-            'issue_date', 'expiry_date', 'amount_paid', 'is_active', 'payment_receipt'
-        ]
-
-
 class ParkingSessionSerializer(serializers.ModelSerializer):
     vehicle_info = VehicleSerializer(source='vehicle', read_only=True)
     guard_name = serializers.CharField(source='scanned_by.get_full_name', read_only=True, allow_null=True)
@@ -85,14 +74,6 @@ class ParkingLotSerializer(serializers.ModelSerializer):
             'id', 'name', 'location', 'total_slots', 'available_slots',
             'occupied_slots', 'occupancy_rate', 'description', 'is_active'
         ]
-
-
-class AnnouncementSerializer(serializers.ModelSerializer):
-    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
-
-    class Meta:
-        model = Announcement
-        fields = ['id', 'title', 'content', 'created_by', 'created_by_name', 'created_at', 'expires_at', 'is_active']
 
 
 class ScanLogSerializer(serializers.ModelSerializer):
