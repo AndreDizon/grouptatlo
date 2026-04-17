@@ -663,7 +663,7 @@ def encrypt_data(request):
         
         return Response({
             'encrypted': encrypted,
-            'message': 'Data encrypted successfully using 3DES'
+            'message': 'Data encrypted successfully using DES'
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response(
@@ -699,7 +699,7 @@ def decrypt_data(request):
         
         return Response({
             'decrypted': decrypted_data,
-            'message': 'Data decrypted successfully using 3DES'
+            'message': 'Data decrypted successfully using DES'
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response(
