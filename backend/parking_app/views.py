@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from datetime import timedelta, date, datetime
+import json
 
 from .models import (
     Vehicle, ParkingSession,
@@ -634,3 +635,74 @@ class ScanLogViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ============ DES Encryption/Decryption Endpoints ============
+@api_view(['POST'])
+def encrypt_data(request):
+    """
+    Encrypt data using 3DES encryption
+    Expected POST data: { "data": "..." } or { "data": {...} }
+    Returns: { "encrypted": "...", "message": "Data encrypted successfully" }
+    """
+    from .encryption import DESEncryption
+    
+    try:
+        data = request.data.get('data')
+        if data is None:
+            return Response(
+                {'error': 'Data field is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Convert dict to JSON string if necessary
+        if isinstance(data, dict):
+            encrypted = DESEncryption.encrypt_dict(data)
+        else:
+            encrypted = DESEncryption.encrypt(str(data))
+        
+        return Response({
+            'encrypted': encrypted,
+            'message': 'Data encrypted successfully using 3DES'
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(['POST'])
+def decrypt_data(request):
+    """
+    Decrypt data using 3DES decryption
+    Expected POST data: { "encrypted": "..." }
+    Returns: { "decrypted": "...", "message": "Data decrypted successfully" }
+    """
+    from .encryption import DESEncryption
+    
+    try:
+        encrypted = request.data.get('encrypted')
+        if not encrypted:
+            return Response(
+                {'error': 'Encrypted field is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        decrypted = DESEncryption.decrypt(encrypted)
+        
+        # Try to parse as JSON
+        try:
+            decrypted_data = json.loads(decrypted)
+        except json.JSONDecodeError:
+            decrypted_data = decrypted
+        
+        return Response({
+            'decrypted': decrypted_data,
+            'message': 'Data decrypted successfully using 3DES'
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )

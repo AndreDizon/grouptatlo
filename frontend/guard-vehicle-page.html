@@ -319,25 +319,69 @@
         }
 
         // --- SHARED ENCRYPTION/DECRYPTION LOGIC ---
-        // Apply encryption to all data cells using DES hex encoding
-        function applyEncryption(isEncrypting) {
+        // Apply encryption to all data cells using 3DES from backend
+        let isCurrentlyEncrypted = false;
+
+        async function applyEncryption(isEncrypting) {
             const cells = document.querySelectorAll('.data-cell');
-            cells.forEach(cell => {
+            const cellsArray = Array.from(cells);
+            
+            try {
                 if (isEncrypting) {
-                    // Encrypt: Convert characters to hex and pad
-                    const originalValue = cell.getAttribute('data-val');
-                    const encryptedValue = Array.from(originalValue)
-                        .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
-                        .join('')
-                        .padEnd(32, '0');
-                    cell.innerText = encryptedValue;
-                    cell.classList.add('encrypted');
+                    // Encrypt using backend DES API
+                    for (const cell of cellsArray) {
+                        const originalValue = cell.getAttribute('data-val');
+                        
+                        const response = await fetch(`${API_BASE_URL}/encrypt/`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ data: originalValue })
+                        });
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            cell.innerText = result.encrypted.substring(0, 40) + '...';
+                            cell.classList.add('encrypted');
+                            cell.setAttribute('data-encrypted', result.encrypted);
+                        } else {
+                            console.error('Encryption failed');
+                            alert('Encryption failed: ' + response.statusText);
+                        }
+                    }
+                    isCurrentlyEncrypted = true;
                 } else {
-                    // Decrypt: Restore original value
-                    cell.innerText = cell.getAttribute('data-val');
-                    cell.classList.remove('encrypted');
+                    // Decrypt using backend DES API
+                    for (const cell of cellsArray) {
+                        const encryptedValue = cell.getAttribute('data-encrypted');
+                        
+                        if (encryptedValue) {
+                            const response = await fetch(`${API_BASE_URL}/decrypt/`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ encrypted: encryptedValue })
+                            });
+                            
+                            if (response.ok) {
+                                const result = await response.json();
+                                cell.innerText = result.decrypted;
+                                cell.classList.remove('encrypted');
+                                cell.removeAttribute('data-encrypted');
+                            } else {
+                                console.error('Decryption failed');
+                                alert('Decryption failed: ' + response.statusText);
+                            }
+                        } else {
+                            // Not encrypted, restore original
+                            cell.innerText = cell.getAttribute('data-val');
+                            cell.classList.remove('encrypted');
+                        }
+                    }
+                    isCurrentlyEncrypted = false;
                 }
-            });
+            } catch (error) {
+                console.error('Encryption/Decryption error:', error);
+                alert('Error: ' + error.message);
+            }
         }
 
         // Toggle encryption and sync across pages
