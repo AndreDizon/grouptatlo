@@ -331,17 +331,6 @@
                 document.getElementById('peak-timein-hour').textContent = peakTimeIn;
                 document.getElementById('peak-timeout-hour').textContent = peakTimeOut;
 
-                // Now calculate guards scanning statistics
-                const totalSystemScans = allSessions.length;
-                const qrTimeIns = allSessions.filter(s => s.time_in).length;
-                const qrTimeOuts = allSessions.filter(s => s.time_out).length;
-                const manualEntries = allSessions.filter(s => s.notes && s.notes.toLowerCase().includes('manual')).length;
-
-                updateStat('total-system-scans', totalSystemScans);
-                updateStat('qr-time-ins', qrTimeIns);
-                updateStat('qr-time-outs', qrTimeOuts);
-                updateStat('manual-entries', manualEntries);
-
             } catch (error) {
                 console.error('Error loading parking statistics:', error);
                 // Show 0 values when backend unavailable
@@ -349,10 +338,6 @@
                 document.getElementById('currently-parked-stat').textContent = '0';
                 document.getElementById('peak-timein-hour').textContent = 'N/A';
                 document.getElementById('peak-timeout-hour').textContent = 'N/A';
-                updateStat('total-system-scans', 0);
-                updateStat('qr-time-ins', 0);
-                updateStat('qr-time-outs', 0);
-                updateStat('manual-entries', 0);
             }
         }
 
