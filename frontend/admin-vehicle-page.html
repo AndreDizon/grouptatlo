@@ -59,7 +59,8 @@
         body.night-mode #pricing-tbody td:nth-child(1), body.night-mode #pricing-tbody td:nth-child(2) { color: #ffffff !important; }
         body.night-mode #pricing-table thead th:nth-child(1), body.night-mode #pricing-table thead th:nth-child(2) { color: #ffffff !important; }
         body.night-mode .bg-gray-50 { background-color: #111827 !important; color: #cbd5e1 !important; border-color: #2a3752 !important;}
-        body.night-mode .bg-\[\#002366\] { background-color: #0f172a !important; border-bottom: 1px solid #2a3752; }
+        body.night-mode .bg-\[\#002366\] { background-color: #0f172a !important; border-bottom: 1px solid #2a3752; color: #ffffff !important; }
+        body.night-mode .bg-\[\#002366\] th { color: #ffffff !important; }
         body.night-mode .border-gray-200, body.night-mode .border-gray-100, body.night-mode hr.border-gray-200 { border-color: #2a3752 !important; }
         body.night-mode .divide-y > :not([hidden]) ~ :not([hidden]) { border-color: #2a3752 !important; }
         body.night-mode .hover\:bg-gray-50:hover { background-color: #1f2937 !important; }
@@ -217,16 +218,16 @@
             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-gray-100 border-b border-gray-200">
+                        <thead class="bg-[#002366] text-white transition-colors duration-300">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Vehicle Info</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Driver</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Plate</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Pass Type</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Payment</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">Registered Date</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-gray-700">QR Code</th>
-                                <th class="px-6 py-4 text-center text-sm font-bold text-gray-700">Actions</th>
+                                <th class="px-6 py-4 text-left font-semibold">Vehicle Info</th>
+                                <th class="px-6 py-4 text-left font-semibold">Driver</th>
+                                <th class="px-6 py-4 text-left font-semibold">Plate</th>
+                                <th class="px-6 py-4 text-left font-semibold">Pass Type</th>
+                                <th class="px-6 py-4 text-left font-semibold">Payment</th>
+                                <th class="px-6 py-4 text-left font-semibold">Registered Date</th>
+                                <th class="px-6 py-4 text-left font-semibold">QR Code</th>
+                                <th class="px-6 py-4 text-center font-semibold">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="vehicles-table-body">
@@ -288,12 +289,12 @@
             
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-x-auto transition-colors duration-300">
                 <table class="w-full text-left text-sm text-gray-700 border-collapse transition-colors duration-300" id="pricing-table">
-                    <thead class="bg-gray-50 text-gray-600 transition-colors duration-300">
+                    <thead class="bg-[#002366] text-white transition-colors duration-300">
                         <tr>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Pass Type</th>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Vehicle Type</th>
-                            <th class="border-b border-gray-200 p-3 font-bold w-32 transition-colors duration-300">Price</th>
-                            <th class="border-b border-gray-200 p-3 font-bold w-48 text-center transition-colors duration-300">Actions</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Pass Type</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Vehicle Type</th>
+                            <th class="px-6 py-4 font-semibold w-32 transition-colors duration-300">Price</th>
+                            <th class="px-6 py-4 font-semibold w-48 text-center transition-colors duration-300">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="transition-colors duration-300" id="pricing-tbody">

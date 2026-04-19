@@ -112,9 +112,9 @@
         /* Manage accounts table text color fix */
         body.night-mode [id^="view-"] tbody td { color: #cbd5e1 !important; }
         body.night-mode [id^="view-"] .font-bold.text-gray-800 { color: #e2e8f0 !important; }
-        /* Night mode header styling for manage accounts */
-        body.night-mode [id^="view-"] thead { background-color: #1f2937 !important; color: #9ca3af !important; }
-        body.night-mode [id^="view-"] thead th { border-color: #2a3752 !important; color: #9ca3af !important; }
+        /* Night mode header styling for manage accounts - dark blue headers with white text */
+        body.night-mode [id^="view-"] thead { background-color: #0f172a !important; color: #ffffff !important; border-color: #2a3752 !important; }
+        body.night-mode [id^="view-"] thead th { border-color: #2a3752 !important; color: #ffffff !important; }
 
         /* --- FOOTER STYLES --- */
         .animated-footer {
@@ -235,12 +235,12 @@
             
             <div id="view-drivers" class="p-0 overflow-x-auto overflow-y-auto h-full">
                 <table class="w-full text-left text-sm text-gray-700 border-collapse transition-colors duration-300">
-                    <thead class="bg-gray-50 text-gray-600 transition-colors duration-300">
+                    <thead class="bg-[#002366] text-white transition-colors duration-300">
                         <tr>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Driver Name</th>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Contact</th>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Email</th>
-                            <th class="border-b border-gray-200 p-3 font-bold text-center transition-colors duration-300">Actions</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Driver Name</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Contact</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Email</th>
+                            <th class="px-6 py-4 font-semibold text-center transition-colors duration-300">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="drivers-tbody" class="divide-y divide-gray-150 transition-colors duration-300">
@@ -251,12 +251,12 @@
 
             <div id="view-guards" class="p-0 overflow-x-auto overflow-y-auto h-full hidden">
                 <table class="w-full text-left text-sm text-gray-700 border-collapse transition-colors duration-300">
-                    <thead class="bg-gray-50 text-gray-600 transition-colors duration-300">
+                    <thead class="bg-[#002366] text-white transition-colors duration-300">
                         <tr>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Guard Name</th>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Contact</th>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Email</th>
-                            <th class="border-b border-gray-200 p-3 font-bold text-center transition-colors duration-300">Actions</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Guard Name</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Contact</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Email</th>
+                            <th class="px-6 py-4 font-semibold text-center transition-colors duration-300">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="guards-tbody" class="divide-y divide-gray-150 transition-colors duration-300">
@@ -267,12 +267,12 @@
 
             <div id="view-admins" class="p-0 overflow-x-auto overflow-y-auto h-full hidden">
                 <table class="w-full text-left text-sm text-gray-700 border-collapse transition-colors duration-300">
-                    <thead class="bg-gray-50 text-gray-600 transition-colors duration-300">
+                    <thead class="bg-[#002366] text-white transition-colors duration-300">
                         <tr>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Admin Name</th>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Contact</th>
-                            <th class="border-b border-gray-200 p-3 font-bold transition-colors duration-300">Email</th>
-                            <th class="border-b border-gray-200 p-3 font-bold text-center transition-colors duration-300">Actions</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Admin Name</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Contact</th>
+                            <th class="px-6 py-4 font-semibold transition-colors duration-300">Email</th>
+                            <th class="px-6 py-4 font-semibold text-center transition-colors duration-300">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="admins-tbody" class="divide-y divide-gray-150 transition-colors duration-300">
