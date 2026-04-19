@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: ua-parking-backend
+    env: python
+    plan: free
+    region: oregon
+    
+    buildCommand: |
+      pip install -r backend/requirements.txt
+      cd backend
+      python manage.py migrate
+      python manage.py collectstatic --noinput
+    
+    startCommand: |
+      cd backend && gunicorn parking_system.wsgi:application --bind 0.0.0.0:$PORT --workers 3
+    
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ua-parking-db
+          property: connectionString
+
+  - type: pgsql
+    name: ua-parking-db
+    plan: free
+    region: oregon

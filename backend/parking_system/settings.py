@@ -117,16 +117,24 @@ REST_FRAMEWORK = {
 }
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://localhost:5000',
-    'http://localhost:8000',
-    'http://localhost:8080',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5000',
-    'http://127.0.0.1:8000',
-    'http://127.0.0.1:8080',
-]
+if DEBUG:
+    # Development: Allow localhost
+    CORS_ALLOWED_ORIGINS = [
+        'http://localhost:3000',
+        'http://localhost:5000',
+        'http://localhost:8000',
+        'http://localhost:8080',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5000',
+        'http://127.0.0.1:8000',
+        'http://127.0.0.1:8080',
+    ]
+else:
+    # Production: Allow from environment variable or default
+    cors_origins_str = os.getenv('CORS_ALLOWED_ORIGINS', 
+                                 'https://ua-parking-backend.onrender.com,https://ua-parking-system.vercel.app')
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_str.split(',')]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # Email Configuration
