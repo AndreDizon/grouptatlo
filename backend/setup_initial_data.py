@@ -100,7 +100,7 @@ vehicles_data = [
 print("\nCreating sample vehicles...")
 for vehicle_data in vehicles_data:
     if not Vehicle.objects.filter(plate_number=vehicle_data['plate_number']).exists():
-        Vehicle.objects.create(owner=driver1, **vehicle_data, is_registered=True)
+        Vehicle.objects.create(owner=driver1, **vehicle_data)
         print(f"✓ Created vehicle: {vehicle_data['brand']} {vehicle_data['model']} - {vehicle_data['plate_number']}")
     else:
         print(f"✓ Vehicle {vehicle_data['plate_number']} already exists")
