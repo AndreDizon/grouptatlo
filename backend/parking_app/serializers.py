@@ -35,6 +35,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 class VehicleSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField(source='owner.get_full_name', read_only=True)
+    qr_code = serializers.SerializerMethodField()
+    
+    def get_qr_code(self, obj):
+        if obj.qr_code:
+            # Return the full URL including domain for Cloudinary
+            if hasattr(obj.qr_code, 'url'):
+                return obj.qr_code.url
+            return str(obj.qr_code)
+        return None
 
     class Meta:
         model = Vehicle
