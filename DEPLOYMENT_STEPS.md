@@ -116,7 +116,7 @@ Your Code (GitHub)
    ```
    Name:           ua-parking-db
    Database:       ua_parking_db
-   User:           parking_user
+   User:           parking_andre
    Region:         Oregon (or your region)
    Plan:           Free
    ```
