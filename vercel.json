@@ -1,6 +1,6 @@
 {
-  "buildCommand": "echo 'Frontend build complete'",
-  "outputDirectory": "frontend",
+  "buildCommand": "echo 'build complete'",
+  "outputDirectory": ".",
   "public": false,
   "regions": ["iad1"],
   "env": {},
@@ -30,7 +30,7 @@
       ]
     },
     {
-      "source": "/*.html",
+      "source": "/(.*).html",
       "headers": [
         {
           "key": "Cache-Control",
