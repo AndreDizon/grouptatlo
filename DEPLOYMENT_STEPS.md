@@ -1,6 +1,29 @@
 # 🚀 UA PARKING SYSTEM - COMPLETE DEPLOYMENT GUIDE
 ## Step-by-Step Instructions for Render (Backend) and Vercel (Frontend)
 
+### 📁 Repository Structure (Single Repo Setup)
+```
+grouptatlo/                          ← Your GitHub Repository
+├── backend/                         ← Django Backend
+│   ├── parking_system/
+│   ├── parking_app/
+│   ├── manage.py
+│   ├── requirements.txt
+│   └── db.sqlite3
+├── frontend/                        ← Static Frontend (23 HTML files)
+│   ├── login.html
+│   ├── driver-*.html
+│   ├── guard-*.html
+│   ├── admin-*.html
+│   └── logo.png
+├── Procfile                         ← Render process definition
+├── render.yaml                      ← Render deployment config
+├── vercel.json                      ← Vercel deployment config
+└── [documentation files]
+```
+
+**This guide assumes your setup where frontend and backend are in the SAME repository.** ✅
+
 ---
 
 ## 📋 BEFORE YOU START - WHAT YOU NEED
@@ -93,7 +116,7 @@ Your Code (GitHub)
    ```
    Name:           ua-parking-db
    Database:       ua_parking_db
-   User:           postgres
+   User:           parking_user
    Region:         Oregon (or your region)
    Plan:           Free
    ```
@@ -107,7 +130,7 @@ Your Code (GitHub)
 
 1. In Render dashboard, click **"+ New"** → **"Web Service"**
 2. Choose **"Deploy existing project from GitHub"**
-3. Select **"grouptatlo"** repository
+3. Select **"grouptatlo"** repository *(this is your single repo with both frontend & backend)*
 4. Fill in configuration:
 
    ```
@@ -115,19 +138,18 @@ Your Code (GitHub)
    Environment:    Python 3
    Region:         Oregon (same as database)
    Branch:         main
+   Root:           Leave empty (use project root)
    ```
 
 5. **Build Command:**
    ```
-   pip install -r backend/requirements.txt && \
-   cd backend && \
-   python manage.py migrate && \
-   python manage.py collectstatic --noinput
+   pip install -r backend/requirements.txt && cd backend && python manage.py migrate && python manage.py collectstatic --noinput
    ```
 
 6. **Start Command:**
    ```
    cd backend && gunicorn parking_system.wsgi:application --bind 0.0.0.0:$PORT --workers 3
+   ```
    ```
 
 7. Click **"Create Web Service"**
@@ -209,13 +231,13 @@ Once deployment completes:
 
 1. In Vercel dashboard, click **"+ New Project"**
 2. Select **"Import Git Repository"**
-3. Find **"grouptatlo"** and click **"Import"**
+3. Find **"grouptatlo"** and click **"Import"** *(same repo, but frontend only)*
 4. Configure settings:
 
    ```
    Project Name:        ua-parking-system
    Framework:          Other (static HTML)
-   Root Directory:     frontend
+   Root Directory:     frontend  ← IMPORTANT: This is where your HTML files are
    Build Command:      echo 'build complete'
    Output Directory:   .
    ```
