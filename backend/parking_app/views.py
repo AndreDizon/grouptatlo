@@ -217,9 +217,18 @@ class VehicleViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def generate_qr(self, request, pk=None):
         vehicle = self.get_object()
+        
+        # Delete old QR code if it exists to save storage space
+        if vehicle.qr_code:
+            try:
+                vehicle.qr_code.delete(save=False)
+            except Exception as e:
+                print(f"Warning: Could not delete old QR code for vehicle {vehicle.id}: {str(e)}")
+        
+        # Generate new QR code
         vehicle.generate_qr_code()
         vehicle.save()
-        return Response({'message': 'QR code generated successfully'})
+        return Response({'message': 'QR code regenerated successfully'})
 
     def perform_destroy(self, instance):
         """Delete QR code file and database record when vehicle is deleted"""
