@@ -386,7 +386,7 @@
             localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
             applyThemeStyles();
             document.body.classList.add('fade-out');
-            setTimeout(() => location.reload(), 300);
+            setTimeout(() => location.reload(), 100);
         }
 
         themeToggleBtn.addEventListener('click', toggleTheme);
