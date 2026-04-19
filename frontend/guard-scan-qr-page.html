@@ -320,15 +320,14 @@
         // Submit scan log to database
         async function logScan(scanType) {
             try {
-                const response = await fetch(`${API_BASE_URL}/scan-logs/`, {
+                // Use the manual_entry endpoint to properly create both ScanLog and ParkingSession
+                const response = await fetch(`${API_BASE_URL}/scan-logs/manual_entry/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        vehicle: currentVehicle.id,
+                        plate_number: currentVehicle.plate_number,
                         scan_type: scanType,
-                        scan_time: new Date().toISOString(),
-                        manual_entry: false,
-                        notes: `${scanType} - ${new Date().toLocaleString()}`
+                        notes: `Manual scan - ${new Date().toLocaleString()}`
                     })
                 });
                 
