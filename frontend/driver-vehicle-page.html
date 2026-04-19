@@ -521,12 +521,12 @@
             }
         }
 
-        // Track which vehicles we've already attempted to regenerate QR for (prevent infinite loops)
+        // Track which vehicles we've already attempted to regenerate QR for (persist across reloads)
         const qrRegenerationAttempted = new Set();
 
         // --- AUTO-REGENERATE QR CODE (if file missing) ---
         async function autoRegenerateQR(vehicleId, plateNumber) {
-            // Prevent infinite loop - only try once per vehicle
+            // Prevent infinite loop - only try once per page load
             if (qrRegenerationAttempted.has(vehicleId)) {
                 console.log(`QR regeneration already attempted for vehicle ${vehicleId}`);
                 return;
@@ -542,11 +542,12 @@
 
                 if (response.ok) {
                     console.log(`✓ QR code auto-regenerated for ${plateNumber}`);
-                    // Reload vehicles to display new QR
-                    setTimeout(() => {
-                        qrRegenerationAttempted.clear(); // Reset for next load
-                        loadUserVehicles();
-                    }, 500);
+                    // Just update this vehicle's QR image, don't reload all vehicles
+                    const qrImg = document.querySelector(`#qr-container-${vehicleId} img`);
+                    if (qrImg) {
+                        qrImg.src = `${qrImg.src.split('?')[0]}?t=${Date.now()}`;
+                        qrImg.onerror = null; // Remove onerror handler to prevent infinite loop
+                    }
                 } else {
                     console.error(`Failed to auto-regenerate QR for ${plateNumber}`);
                 }
