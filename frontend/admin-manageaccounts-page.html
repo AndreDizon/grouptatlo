@@ -187,10 +187,6 @@
                             <th class="px-4 py-3 font-semibold">Driver Name</th>
                             <th class="px-4 py-3 font-semibold">Contact</th>
                             <th class="px-4 py-3 font-semibold">Email</th>
-                            <th class="px-4 py-3 font-semibold">Vehicle Type</th>
-                            <th class="px-4 py-3 font-semibold">Pass</th>
-                            <th class="px-4 py-3 font-semibold">Plate Number</th>
-                            <th class="px-4 py-3 font-semibold text-center">Payment Status</th>
                             <th class="px-4 py-3 font-semibold text-center">Actions</th>
                         </tr>
                     </thead>
@@ -423,61 +419,25 @@
             tbody.innerHTML = '';
 
             for (const driver of drivers) {
-                const vehicles = await getDriverVehicles(driver.id);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                row.setAttribute('data-driver-id', driver.id);
                 
-                if (vehicles.length > 0) {
-                    for (const vehicle of vehicles) {
-                        const row = document.createElement('tr');
-                        row.className = 'hover:bg-gray-50 transition-colors duration-300';
-                        row.setAttribute('data-driver-id', driver.id);
-                        row.setAttribute('data-vehicle-id', vehicle.id);
-                        
-                        const fullName = `${driver.first_name} ${driver.last_name}`.trim() || driver.username;
-                        const paymentStatus = vehicle.is_paid ? 'PAID' : 'UNPAID';
-                        const paymentColor = vehicle.is_paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
-                        
-                        row.innerHTML = `
-                            <td class="px-4 py-3 font-bold">${fullName}</td>
-                            <td class="px-4 py-3">${driver.phone_number || 'N/A'}</td>
-                            <td class="px-4 py-3">${driver.email}</td>
-                            <td class="px-4 py-3">${vehicle.vehicle_type || 'Unknown'}</td>
-                            <td class="px-4 py-3 text-[#002366] font-bold">Park</td>
-                            <td class="px-4 py-3">${vehicle.plate_number || 'N/A'}</td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="${paymentColor} px-3 py-1 rounded font-bold inline-block">${paymentStatus}</span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <button onclick="confirmDelete(this, 'vehicle')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition-colors">Delete Vehicle</button>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    }
-                } else {
-                    // Show driver with no vehicles
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50 transition-colors duration-300';
-                    row.setAttribute('data-driver-id', driver.id);
-                    
-                    const fullName = `${driver.first_name} ${driver.last_name}`.trim() || driver.username;
-                    
-                    row.innerHTML = `
-                        <td class="px-4 py-3 font-bold">${fullName}</td>
-                        <td class="px-4 py-3">${driver.phone_number || 'N/A'}</td>
-                        <td class="px-4 py-3">${driver.email}</td>
-                        <td class="px-4 py-3 text-gray-400">No Vehicle</td>
-                        <td class="px-4 py-3 text-gray-400">-</td>
-                        <td class="px-4 py-3 text-gray-400">-</td>
-                        <td class="px-4 py-3 text-center text-gray-400">-</td>
-                        <td class="px-4 py-3 text-center">
-                            <button onclick="confirmDelete(this, 'driver account')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition-colors">Delete Account</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                }
+                const fullName = `${driver.first_name} ${driver.last_name}`.trim() || driver.username;
+                
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-bold">${fullName}</td>
+                    <td class="px-4 py-3">${driver.phone_number || 'N/A'}</td>
+                    <td class="px-4 py-3">${driver.email}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="confirmDelete(this, 'driver account')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition-colors">Delete Account</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
             }
 
             if (drivers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">No drivers found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">No drivers found</td></tr>';
             }
         }
 
@@ -539,7 +499,7 @@
 
         // Fallback local data loaders
         function loadDriversTableLocal() {
-            document.getElementById('drivers-tbody').innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Backend unavailable. Please check your connection and refresh the page.</td></tr>';
+            document.getElementById('drivers-tbody').innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">Backend unavailable. Please check your connection and refresh the page.</td></tr>';
         }
 
         function loadGuardsTableLocal() {
