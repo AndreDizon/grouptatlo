@@ -232,6 +232,20 @@ class VehicleViewSet(viewsets.ModelViewSet):
         vehicle.save()
         return Response({'message': 'QR code generated successfully'})
 
+    def perform_destroy(self, instance):
+        """Delete QR code file and database record when vehicle is deleted"""
+        # Delete QR code file if it exists
+        if instance.qr_code:
+            try:
+                # Delete the file from storage
+                instance.qr_code.delete(save=False)
+            except Exception as e:
+                # Log error but don't fail the deletion if file is missing
+                print(f"Warning: Could not delete QR code file for vehicle {instance.id}: {str(e)}")
+        
+        # Delete the vehicle record from database
+        instance.delete()
+
 
 class ParkingRateViewSet(viewsets.ModelViewSet):
     queryset = ParkingRate.objects.all()
