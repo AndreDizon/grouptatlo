@@ -228,8 +228,8 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="reveal scale-up bg-gray-50 p-4 rounded-lg border border-gray-100 text-center" data-delay="250">
-                    <p class="text-sm text-gray-600 mb-1">Total Parking Sessions</p>
-                    <p id="total-parking-sessions" class="text-2xl font-bold text-gray-800" data-value="0">0</p>
+                    <p class="text-sm text-gray-600 mb-1">Total Vehicles Used</p>
+                    <p id="total-vehicles-used" class="text-2xl font-bold text-gray-800" data-value="0">0</p>
                 </div>
                 <div class="reveal scale-up bg-gray-50 p-4 rounded-lg border border-gray-100 text-center" data-delay="350">
                     <p class="text-sm text-gray-600 mb-1">Completed Sessions</p>
@@ -375,8 +375,8 @@
                 const stats = await statsResponse.json();
                 
                 // Update stat cards
-                document.getElementById('total-parking-sessions').textContent = stats.total_sessions;
-                document.getElementById('total-parking-sessions').setAttribute('data-value', stats.total_sessions);
+                document.getElementById('total-vehicles-used').textContent = stats.total_vehicles_used;
+                document.getElementById('total-vehicles-used').setAttribute('data-value', stats.total_vehicles_used);
                 
                 document.getElementById('completed-parking-sessions').textContent = stats.completed_sessions;
                 document.getElementById('completed-parking-sessions').setAttribute('data-value', stats.completed_sessions);
@@ -389,7 +389,7 @@
             } catch (error) {
                 console.error('Error loading personal parking statistics:', error);
                 // Reset to 0 on error
-                document.getElementById('total-parking-sessions').textContent = '0';
+                document.getElementById('total-vehicles-used').textContent = '0';
                 document.getElementById('completed-parking-sessions').textContent = '0';
                 document.getElementById('total-duration-parked').textContent = '0 hrs';
                 document.getElementById('active-parking-sessions').textContent = '0';

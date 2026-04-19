@@ -390,6 +390,7 @@ class ParkingSessionViewSet(viewsets.ModelViewSet):
             
             # Calculate statistics
             total_sessions = sessions.count()
+            total_vehicles_used = sessions.values('vehicle_id').distinct().count()
             completed_sessions = sessions.filter(time_out__isnull=False).count()
             active_sessions = sessions.filter(time_out__isnull=True).count()
             
@@ -402,6 +403,7 @@ class ParkingSessionViewSet(viewsets.ModelViewSet):
             
             return Response({
                 'total_sessions': total_sessions,
+                'total_vehicles_used': total_vehicles_used,
                 'completed_sessions': completed_sessions,
                 'active_sessions': active_sessions,
                 'total_duration_hours': round(total_duration_hours, 2),
