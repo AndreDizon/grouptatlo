@@ -36,14 +36,6 @@ class UserSerializer(serializers.ModelSerializer):
 class VehicleSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField(source='owner.get_full_name', read_only=True)
     qr_code = serializers.SerializerMethodField()
-    
-    def get_qr_code(self, obj):
-        if obj.qr_code:
-            # Return the full URL including domain for Cloudinary
-            if hasattr(obj.qr_code, 'url'):
-                return obj.qr_code.url
-            return str(obj.qr_code)
-        return None
 
     class Meta:
         model = Vehicle
@@ -52,6 +44,16 @@ class VehicleSerializer(serializers.ModelSerializer):
             'plate_number', 'color', 'registration_date', 'is_paid', 'pass_type',
             'qr_code', 'sticker_number'
         ]
+    
+    def get_qr_code(self, obj):
+        """Return full Cloudinary URL for QR code"""
+        if obj.qr_code:
+            # If it's already a full URL, return it
+            if obj.qr_code.name.startswith('http'):
+                return obj.qr_code.name
+            # Otherwise get the full URL from the storage backend
+            return obj.qr_code.url if obj.qr_code else None
+        return None
 
 
 class ParkingRateSerializer(serializers.ModelSerializer):
