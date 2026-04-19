@@ -54,9 +54,11 @@
         .reveal.right { transform: translateX(40px); }
         .reveal.none { transform: none; }
 
-        /* --- FADE ANIMATIONS FOR THEME TOGGLE --- */
+        /* --- FADE ANIMATIONS FOR PAGE TRANSITIONS --- */
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        body { animation: fadeIn 0.2s ease-in; }
+        body { animation: fadeIn 0.5s ease-in; }
+        body.fade-out { animation: fadeOut 0.3s ease-out forwards; }
         .reveal.scale-up { transform: translateY(30px) scale(0.95); transition-duration: 0.6s; }
         .reveal.is-visible { opacity: 1; transform: none !important; }
 
@@ -626,6 +628,26 @@
             localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
             location.reload();
         }
+
+        // Add fade-out effect to navigation links
+        function handleNavigation(e) {
+            const href = e.currentTarget.getAttribute('href');
+            if (href && !href.startsWith('#') && !href.startsWith('javascript')) {
+                e.preventDefault();
+                document.body.classList.add('fade-out');
+                setTimeout(() => { window.location.href = href; }, 300);
+            }
+        }
+
+        // Apply fade-out to all navigation links
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('a').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('#') && !href.startsWith('javascript') && !href.includes(':/')) {
+                    link.addEventListener('click', handleNavigation);
+                }
+            });
+        });
 
         themeToggleBtn.addEventListener('click', toggleTheme);
         themeToggleBtnMobile.addEventListener('click', toggleTheme);

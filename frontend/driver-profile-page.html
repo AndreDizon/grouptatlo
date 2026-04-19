@@ -381,6 +381,26 @@
             location.reload();
         }
 
+        // Add fade-out effect to navigation links
+        function handleNavigation(e) {
+            const href = e.currentTarget.getAttribute('href');
+            if (href && !href.startsWith('#') && !href.startsWith('javascript')) {
+                e.preventDefault();
+                document.body.classList.add('fade-out');
+                setTimeout(() => { window.location.href = href; }, 300);
+            }
+        }
+
+        // Apply fade-out to all navigation links
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('a').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('#') && !href.startsWith('javascript') && !href.includes(':/')) {
+                    link.addEventListener('click', handleNavigation);
+                }
+            });
+        });
+
         themeToggleBtn.addEventListener('click', toggleTheme);
         themeToggleBtnMobile.addEventListener('click', toggleTheme);
 
