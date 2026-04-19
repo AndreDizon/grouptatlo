@@ -188,8 +188,8 @@
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex flex-col md:flex-row gap-4">
                     <div class="flex-1">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Search Vehicle (Plate, Brand, Model, Type, Color)</label>
-                        <input id="search-plate" type="text" placeholder="e.g. ABC1234 or Toyota" 
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Search All Columns</label>
+                        <input id="search-plate" type="text" placeholder="Search by vehicle info, driver, plate, pass type, payment, or date" 
                                class="w-full border border-gray-300 rounded-lg p-2.5 focus:border-[#002366] outline-none transition">
                     </div>
                     <div class="flex-1">
@@ -386,13 +386,22 @@
                 
                 // Apply filters
                 if (searchPlate) {
-                    vehicles = vehicles.filter(v => 
-                        v.plate_number.toLowerCase().includes(searchPlate.toLowerCase()) ||
-                        v.brand.toLowerCase().includes(searchPlate.toLowerCase()) ||
-                        v.model.toLowerCase().includes(searchPlate.toLowerCase()) ||
-                        v.vehicle_type.toLowerCase().includes(searchPlate.toLowerCase()) ||
-                        (v.color && v.color.toLowerCase().includes(searchPlate.toLowerCase()))
-                    );
+                    const searchTerm = searchPlate.toLowerCase();
+                    vehicles = vehicles.filter(v => {
+                        const vehicleInfo = `${v.brand} ${v.model} ${v.vehicle_type} ${v.color || ''}`.toLowerCase();
+                        const driver = (v.owner_name || '').toLowerCase();
+                        const plate = (v.plate_number || '').toLowerCase();
+                        const passType = (v.pass_type || '').toLowerCase();
+                        const payment = v.is_paid ? 'paid' : 'unpaid';
+                        const registeredDate = new Date(v.registration_date).toLocaleDateString().toLowerCase();
+                        
+                        return vehicleInfo.includes(searchTerm) ||
+                               driver.includes(searchTerm) ||
+                               plate.includes(searchTerm) ||
+                               passType.includes(searchTerm) ||
+                               payment.includes(searchTerm) ||
+                               registeredDate.includes(searchTerm);
+                    });
                 }
                 
                 if (filterStatus === 'paid') {
