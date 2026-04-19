@@ -451,6 +451,7 @@
             isNightMode = !isNightMode;
             localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
             applyThemeStyles();
+            location.reload();
         }
 
         themeToggleBtn.addEventListener('click', toggleTheme);
