@@ -41,12 +41,25 @@ frontend/
 ├── admin-statistics-page.html          # Admin statistics
 ├── admin-contact&information-page.html # Admin contact info
 │
+├── Assets/
+│   ├── logo.png                        # University of the Assumption logo (favicon)
+│   ├── banner-day.png                  # Day mode banner
+│   ├── banner-night.png                # Night mode banner
+│   ├── bg1.jpg, bg2.jpg                # Background images
+│   └── *.jpeg, *.jpg                   # Additional images
+│
 └── Documentation/
     ├── LOGIN_FLOW_GUIDE.md
     ├── REGISTRATION_FLOW.md
     ├── COMPLETE_USER_FLOW.md
     └── UA PARKING SYSTEM INSTRUCTIONS.txt
 ```
+
+## Styling & Assets
+- **Favicon**: logo.png (University of the Assumption logo)
+- **Page Title**: "UA Parking System" (all pages)
+- **Color Scheme**: Blue, white, and gray with Tailwind utilities
+- **Responsive Design**: Mobile-first approach with Tailwind breakpoints
 
 ## Core Pages
 

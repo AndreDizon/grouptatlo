@@ -87,12 +87,13 @@ The project requires the following Python packages (see `requirements.txt`):
 | django-filter | 23.5 | API filtering |
 | qrcode | 7.4.2 | QR code generation |
 | Pillow | 10.1.0 | Image processing |
-| psycopg2-binary | 2.9.9 | PostgreSQL adapter |
+| psycopg2-binary | 2.9.9 | PostgreSQL adapter (optional for production) |
 | python-dotenv | 1.0.0 | Environment variables |
-| celery | 5.3.4 | Async tasks |
-| redis | 5.0.1 | Caching / Message broker |
-| gunicorn | 21.2.0 | Production server |
+| celery | 5.3.4 | Async task queue |
+| redis | 5.0.1 | Caching & message broker |
+| gunicorn | 21.2.0 | Production WSGI server |
 | whitenoise | 6.6.0 | Static files serving |
+| pycryptodome | 3.19.0 | Encryption utilities |
 
 ### Step 4: Initialize Database
 ```bash

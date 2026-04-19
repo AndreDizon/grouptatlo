@@ -4,11 +4,13 @@
 The UA Parking System is a Django REST Framework-based backend application that manages vehicle parking operations, QR code scanning, vehicle registration, and parking rate configurations for the University of the Assumption.
 
 ## Technology Stack
-- **Framework**: Django 3.x
-- **API**: Django REST Framework (DRF)
-- **Database**: SQLite (development)
-- **Authentication**: Token-based with AllowAny permissions
-- **QR Code Generation**: qrcode library with PIL/Pillow
+- **Framework**: Django 4.2.11
+- **API**: Django REST Framework 3.14.0
+- **Database**: SQLite (development) | PostgreSQL (production-ready)
+- **Authentication**: Django User Model with role-based access
+- **QR Code Generation**: qrcode 7.4.2 with Pillow 10.1.0
+- **Async Tasks**: Celery 5.3.4 with Redis 5.0.1
+- **Encryption**: pycryptodome 3.19.0
 
 ## Project Structure
 ```
