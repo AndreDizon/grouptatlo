@@ -54,6 +54,12 @@
         .reveal.left { transform: translateX(-40px); }
         .reveal.right { transform: translateX(40px); }
         .reveal.none { transform: none; }
+
+        /* --- FADE ANIMATIONS FOR THEME TOGGLE --- */
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body { animation: fadeIn 0.4s ease-in; }
+        body.fade-out { animation: fadeOut 0.3s ease-out forwards; }
         .reveal.is-visible { opacity: 1; transform: none !important; }
 
         /* --- NIGHT MODE OVERRIDES --- */
@@ -525,7 +531,8 @@
             isNightMode = !isNightMode;
             localStorage.setItem('themeMode', isNightMode ? 'night' : 'day');
             applyThemeStyles();
-            location.reload();
+            document.body.classList.add('fade-out');
+            setTimeout(() => location.reload(), 300);
         }
 
         themeToggleBtn.addEventListener('click', toggleTheme);
