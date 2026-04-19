@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Vehicles - UA Parking</title>
+    <title>UA Parking System</title>
+    <link rel="icon" href="logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -370,6 +371,9 @@
         // API Configuration
         const API_BASE_URL = 'http://localhost:8000/api';
 
+        // Store sessions for date filtering
+        let allSessions = [];
+
         // ===== VEHICLE MANAGEMENT FUNCTIONS =====
         
         // Load all vehicles
@@ -581,8 +585,11 @@
                 const sessions = Array.isArray(sessionsData) ? sessionsData : (sessionsData.results || []);
                 const rates = Array.isArray(ratesData) ? ratesData : (ratesData.results || []);
 
-                // Populate vehicle logs
-                loadVehicleLogs(sessions);
+                // Store all sessions globally for filtering
+                allSessions = sessions;
+
+                // Populate vehicle logs with today's date
+                filterLogsByDate();
                 // Populate pricing table
                 loadPricingTable(rates);
 
@@ -630,6 +637,29 @@
             // Fallback - show message to user
             const tbody = document.getElementById('vehicle-logs-tbody');
             tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No vehicle logs available</td></tr>';
+        }
+
+        // Filter logs by selected date
+        function filterLogsByDate() {
+            const dateInput = document.getElementById('log-date');
+            const selectedDate = dateInput.value; // Format: YYYY-MM-DD
+
+            console.log('Selected date:', selectedDate);
+            console.log('All sessions:', allSessions);
+
+            // Filter sessions by the selected date
+            const filteredSessions = allSessions.filter(session => {
+                // Parse the date without timezone conversion issues
+                const timeInString = session.time_in; // e.g., "2026-04-13T05:05:43Z"
+                const sessionDatePart = timeInString.split('T')[0]; // Extract YYYY-MM-DD part
+                
+                console.log('Session date part:', sessionDatePart, 'Selected:', selectedDate, 'Match:', sessionDatePart === selectedDate);
+                return sessionDatePart === selectedDate;
+            });
+
+            console.log('Filtered sessions:', filteredSessions);
+            // Load filtered logs
+            loadVehicleLogs(filteredSessions);
         }
 
         function loadPricingTable(rates) {
@@ -746,6 +776,9 @@
 
         // --- USER SPECIFIC LOGIC ---
         document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+        
+        // Add event listener for date filter
+        document.getElementById('log-date').addEventListener('change', filterLogsByDate);
 
         // DES 3DES Encryption using Backend API
         let isCurrentlyEncrypted = false;

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Accounts - UA Parking</title>
+    <title>UA Parking System</title>
+    <link rel="icon" href="logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -46,6 +47,28 @@
         /* --- USER SPECIFIC COMPONENT STYLES --- */
         .tab-btn { transition: all 0.2s; }
         .tab-btn.active { background-color: #002366 !important; color: white !important; border-color: #002366 !important; }
+
+        /* --- TABLE VIEW STABILIZATION --- */
+        [id^="view-"] {
+            scrollbar-gutter: stable;
+        }
+        
+        [id^="view-"] table {
+            table-layout: fixed;
+            width: 100%;
+        }
+        
+        [id^="view-"] thead th {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
+        }
+        
+        [id^="view-"] tbody td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
+        }
 
         /* --- SCROLL REVEAL ANIMATIONS --- */
         .reveal { opacity: 0; transition: opacity 0.7s ease, transform 0.7s ease; }
@@ -178,51 +201,51 @@
             <button onclick="switchTab('create')" id="btn-create" class="tab-btn px-6 py-2.5 rounded-lg border border-[#FFD700] bg-[#FFD700] text-[#002366] font-bold hover:bg-[#e6c200]">Create an Account</button>
         </div>
 
-        <div class="reveal up bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px] transition-colors duration-300" data-delay="200">
+        <div class="reveal up bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-[500px] transition-colors duration-300" data-delay="200">
             
-            <div id="view-drivers" class="p-0 overflow-x-auto">
-                <table class="w-full text-left text-sm text-gray-700 whitespace-nowrap">
-                    <thead class="bg-gray-50 border-b border-gray-200 transition-colors duration-300">
+            <div id="view-drivers" class="p-0 overflow-x-auto overflow-y-auto h-full">
+                <table class="w-full text-left text-gray-700 whitespace-nowrap">
+                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-300 transition-colors duration-300">
                         <tr>
-                            <th class="px-4 py-3 font-semibold">Driver Name</th>
-                            <th class="px-4 py-3 font-semibold">Contact</th>
-                            <th class="px-4 py-3 font-semibold">Email</th>
-                            <th class="px-4 py-3 font-semibold text-center">Actions</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Driver Name</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Contact</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Email</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="drivers-tbody" class="divide-y divide-gray-100 transition-colors duration-300">
+                    <tbody id="drivers-tbody" class="divide-y divide-gray-150 transition-colors duration-300">
                         <!-- Dynamically loaded from backend -->
                     </tbody>
                 </table>
             </div>
 
-            <div id="view-guards" class="p-0 overflow-x-auto hidden">
-                <table class="w-full text-left text-sm text-gray-700 whitespace-nowrap">
-                    <thead class="bg-gray-50 border-b border-gray-200 transition-colors duration-300">
+            <div id="view-guards" class="p-0 overflow-x-auto overflow-y-auto h-full hidden">
+                <table class="w-full text-left text-gray-700 whitespace-nowrap">
+                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-300 transition-colors duration-300">
                         <tr>
-                            <th class="px-6 py-3 font-semibold">Guard Name</th>
-                            <th class="px-6 py-3 font-semibold">Contact</th>
-                            <th class="px-6 py-3 font-semibold">Email</th>
-                            <th class="px-6 py-3 font-semibold text-right">Actions</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Guard Name</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Contact</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Email</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="guards-tbody" class="divide-y divide-gray-100 transition-colors duration-300">
+                    <tbody id="guards-tbody" class="divide-y divide-gray-150 transition-colors duration-300">
                         <!-- Dynamically loaded from backend -->
                     </tbody>
                 </table>
             </div>
 
-            <div id="view-admins" class="p-0 overflow-x-auto hidden">
-                <table class="w-full text-left text-sm text-gray-700 whitespace-nowrap">
-                    <thead class="bg-gray-50 border-b border-gray-200 transition-colors duration-300">
+            <div id="view-admins" class="p-0 overflow-x-auto overflow-y-auto h-full hidden">
+                <table class="w-full text-left text-gray-700 whitespace-nowrap">
+                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-300 transition-colors duration-300">
                         <tr>
-                            <th class="px-6 py-3 font-semibold">Admin Name</th>
-                            <th class="px-6 py-3 font-semibold">Contact</th>
-                            <th class="px-6 py-3 font-semibold">Email</th>
-                            <th class="px-6 py-3 font-semibold text-right">Actions</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Admin Name</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Contact</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base">Email</th>
+                            <th class="px-6 py-4 font-bold text-gray-800 text-base text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="admins-tbody" class="divide-y divide-gray-100 transition-colors duration-300">
+                    <tbody id="admins-tbody" class="divide-y divide-gray-150 transition-colors duration-300">
                         <!-- Dynamically loaded from backend -->
                     </tbody>
                 </table>
@@ -420,24 +443,24 @@
 
             for (const driver of drivers) {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                row.className = 'hover:bg-blue-50 transition-colors duration-200';
                 row.setAttribute('data-driver-id', driver.id);
                 
                 const fullName = `${driver.first_name} ${driver.last_name}`.trim() || driver.username;
                 
                 row.innerHTML = `
-                    <td class="px-4 py-3 font-bold">${fullName}</td>
-                    <td class="px-4 py-3">${driver.phone_number || 'N/A'}</td>
-                    <td class="px-4 py-3">${driver.email}</td>
-                    <td class="px-4 py-3 text-center">
-                        <button onclick="confirmDelete(this, 'driver account')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition-colors">Delete Account</button>
+                    <td class="px-6 py-4 font-semibold text-gray-900">${fullName}</td>
+                    <td class="px-6 py-4 text-gray-700">${driver.phone_number || 'N/A'}</td>
+                    <td class="px-6 py-4 text-gray-700">${driver.email}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="confirmDelete(this, 'driver account')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">Delete Account</button>
                     </td>
                 `;
                 tbody.appendChild(row);
             }
 
             if (drivers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">No drivers found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500 font-medium">No drivers found</td></tr>';
             }
         }
 
@@ -448,24 +471,24 @@
 
             guards.forEach(guard => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                row.className = 'hover:bg-blue-50 transition-colors duration-200';
                 row.setAttribute('data-guard-id', guard.id);
                 
                 const fullName = `${guard.first_name} ${guard.last_name}`.trim() || guard.username;
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4 font-bold">${fullName}</td>
-                    <td class="px-6 py-4">${guard.phone_number || 'N/A'}</td>
-                    <td class="px-6 py-4">${guard.email}</td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="confirmDelete(this, 'guard account')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded shadow transition-colors">Delete Guard Account</button>
+                    <td class="px-6 py-4 font-semibold text-gray-900">${fullName}</td>
+                    <td class="px-6 py-4 text-gray-700">${guard.phone_number || 'N/A'}</td>
+                    <td class="px-6 py-4 text-gray-700">${guard.email}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="confirmDelete(this, 'guard account')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">Delete Guard Account</button>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
 
             if (guards.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No guards found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500 font-medium">No guards found</td></tr>';
             }
         }
 
@@ -476,24 +499,24 @@
 
             admins.forEach(admin => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-colors duration-300';
+                row.className = 'hover:bg-blue-50 transition-colors duration-200';
                 row.setAttribute('data-admin-id', admin.id);
                 
                 const fullName = `${admin.first_name} ${admin.last_name}`.trim() || admin.username;
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4 font-bold">${fullName}</td>
-                    <td class="px-6 py-4">${admin.phone_number || 'N/A'}</td>
-                    <td class="px-6 py-4">${admin.email}</td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="confirmDelete(this, 'admin account')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded shadow transition-colors">Delete Admin Account</button>
+                    <td class="px-6 py-4 font-semibold text-gray-900">${fullName}</td>
+                    <td class="px-6 py-4 text-gray-700">${admin.phone_number || 'N/A'}</td>
+                    <td class="px-6 py-4 text-gray-700">${admin.email}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="confirmDelete(this, 'admin account')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">Delete Admin Account</button>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
 
             if (admins.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No admins found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500 font-medium">No admins found</td></tr>';
             }
         }
 
