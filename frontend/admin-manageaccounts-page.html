@@ -111,10 +111,15 @@
         body.night-mode .tab-btn:not(.active):not(#btn-create) { background-color: #1a2235; color: #cbd5e1; border-color: #2a3752; }
         /* Manage accounts table text color fix */
         body.night-mode [id^="view-"] tbody td { color: #cbd5e1 !important; }
+        body.night-mode [id^="view-"] tbody tr:hover td { background-color: #0f172a !important; }
         body.night-mode [id^="view-"] .font-bold.text-gray-800 { color: #e2e8f0 !important; }
         /* Night mode header styling for manage accounts - dark blue headers with white text */
         body.night-mode [id^="view-"] thead { background-color: #0f172a !important; color: #ffffff !important; border-color: #2a3752 !important; }
         body.night-mode [id^="view-"] thead th { border-color: #2a3752 !important; color: #ffffff !important; }
+        
+        /* Day mode manage accounts table header text visibility */
+        [id^="view-"] thead { background-color: #002366 !important; }
+        [id^="view-"] thead th { color: #ffffff !important; font-weight: 600; }
 
         /* --- FOOTER STYLES --- */
         .animated-footer {
