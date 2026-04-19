@@ -276,7 +276,11 @@
 
                 const sessionsData = await sessionsRes.json();
                 const sessions = Array.isArray(sessionsData) ? sessionsData : (sessionsData.results || []);
-                loadVehicleLogs(sessions);
+                allVehicleSessions = sessions;
+                
+                // Filter by today's date by default
+                const today = new Date().toISOString().split('T')[0];
+                filterVehicleLogsByDate(today);
 
             } catch (error) {
                 console.warn('Backend unavailable, using fallback:', error);
@@ -320,6 +324,32 @@
         function loadVehicleLogsLocal() {
             const tbody = document.getElementById('vehicle-logs-tbody');
             tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No vehicle logs available</td></tr>';
+        }
+
+        // Store all sessions globally for date filtering
+        let allVehicleSessions = [];
+
+        // Filter and display logs by selected date
+        function filterVehicleLogsByDate(selectedDate) {
+            if (!selectedDate || allVehicleSessions.length === 0) {
+                loadVehicleLogs(allVehicleSessions);
+                return;
+            }
+
+            // Parse selected date (format: YYYY-MM-DD)
+            const [year, month, day] = selectedDate.split('-').map(Number);
+            const filterDate = new Date(year, month - 1, day);
+            const filterDateStart = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate(), 0, 0, 0);
+            const filterDateEnd = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate(), 23, 59, 59, 999);
+
+            // Filter sessions by date
+            const filteredSessions = allVehicleSessions.filter(session => {
+                if (!session.time_in) return false;
+                const sessionDate = new Date(session.time_in);
+                return sessionDate >= filterDateStart && sessionDate <= filterDateEnd;
+            });
+
+            loadVehicleLogs(filteredSessions);
         }
 
         // --- SHARED ENCRYPTION/DECRYPTION LOGIC ---
@@ -501,6 +531,11 @@
             const dateInput = document.getElementById('log-date');
             const today = new Date().toISOString().split('T')[0];
             dateInput.value = today;
+
+            // Add event listener to filter logs when date changes
+            dateInput.addEventListener('change', (e) => {
+                filterVehicleLogsByDate(e.target.value);
+            });
 
             const observer = new IntersectionObserver((entries, obs) => {
                 entries.forEach(entry => {
