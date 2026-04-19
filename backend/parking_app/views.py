@@ -441,8 +441,24 @@ class ScanLogViewSet(viewsets.ModelViewSet):
         guard_id = request.data.get('guard_id')  # Get guard ID from frontend
         
         try:
-            vehicle_id = qr_data.split('_')[2]
-            vehicle = Vehicle.objects.get(id=vehicle_id)
+            # Extract vehicle_id and plate_number from QR data format: UA_PARKING_{id}_{plate_number}
+            parts = qr_data.split('_', 3)  # Split into at most 4 parts
+            if len(parts) < 4:
+                return Response({'error': 'Invalid QR code format'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            vehicle_id = parts[2]
+            plate_number = parts[3].upper() if len(parts) > 3 else None
+            
+            # Use plate_number as source of truth to look up vehicle
+            # This ensures correct vehicle even if QR code data is stale
+            if plate_number:
+                try:
+                    vehicle = Vehicle.objects.get(plate_number=plate_number)
+                except Vehicle.DoesNotExist:
+                    # Fallback to vehicle_id if plate_number lookup fails
+                    vehicle = Vehicle.objects.get(id=vehicle_id)
+            else:
+                vehicle = Vehicle.objects.get(id=vehicle_id)
             
             # Determine guard: use guard_id from request if provided, otherwise use authenticated user
             guard = None
