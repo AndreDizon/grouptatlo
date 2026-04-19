@@ -393,13 +393,13 @@
             location.reload();
         }
 
-        // Add fade-out effect to navigation links
+        // Add fade-in effect on page load
+        // Navigation links navigate normally without fade-out
         function handleNavigation(e) {
             const href = e.currentTarget.getAttribute('href');
             if (href && !href.startsWith('#') && !href.startsWith('javascript')) {
                 e.preventDefault();
-                document.body.classList.add('fade-out');
-                setTimeout(() => { window.location.href = href; }, 300);
+                window.location.href = href;
             }
         }
 
