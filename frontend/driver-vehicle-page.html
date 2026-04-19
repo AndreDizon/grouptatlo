@@ -340,9 +340,13 @@
                             </div>
                             
                             <div class="w-full md:w-64 flex flex-col items-center text-center gap-3">
-                                <div class="relative">
-                                    ${vehicle.qr_code ? `<img src="${vehicle.qr_code}" alt="QR Code" class="w-40 h-40 border-2 border-gray-300 rounded-lg ${!vehicle.is_paid ? 'blur-sm' : ''}">` : '<p class="text-gray-400 text-sm">QR Code generating...</p>'}
+                                <div class="relative" id="qr-container-${vehicle.id}">
+                                    ${vehicle.qr_code ? `<img src="${vehicle.qr_code}?t=${Date.now()}" alt="QR Code" class="w-40 h-40 border-2 border-gray-300 rounded-lg ${!vehicle.is_paid ? 'blur-sm' : ''}" onerror="autoRegenerateQR(${vehicle.id}, '${vehicle.plate_number}')">` : '<p class="text-gray-400 text-sm">QR Code generating...</p>'}
                                     ${!vehicle.is_paid ? '<p class="text-red-500 text-xs mt-2 font-bold">❌ BLURRED - Awaiting Admin Approval</p>' : '<p class="text-green-500 text-xs mt-2 font-bold">✓ VERIFIED</p>'}
+                                    <button onclick="regenerateQR(${vehicle.id}, '${vehicle.plate_number}')" class="mt-3 px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition text-xs font-semibold flex items-center justify-center gap-2 w-full">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                                        Regenerate QR
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -508,7 +512,54 @@
             }
         }
 
-        // --- GENERATE QR CODE ---
+        // --- AUTO-REGENERATE QR CODE (if file missing) ---
+        async function autoRegenerateQR(vehicleId, plateNumber) {
+            console.log(`Auto-regenerating QR for vehicle ${vehicleId} (${plateNumber}) - file appears to be missing`);
+            try {
+                const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/generate_qr/`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    console.log(`✓ QR code auto-regenerated for ${plateNumber}`);
+                    // Reload vehicles to display new QR
+                    setTimeout(() => {
+                        loadUserVehicles();
+                    }, 500);
+                } else {
+                    console.error(`Failed to auto-regenerate QR for ${plateNumber}`);
+                }
+            } catch (error) {
+                console.error(`Error auto-regenerating QR code: ${error.message}`);
+            }
+        }
+
+        // --- REGENERATE QR CODE ---
+        async function regenerateQR(vehicleId, plateNumber) {
+            if (!confirm(`Regenerate QR code for vehicle ${plateNumber}? This will create a new QR code.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/generate_qr/`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert(`✓ QR code for ${plateNumber} has been successfully regenerated.`);
+                    // Small delay to let file write to disk before reloading
+                    setTimeout(() => {
+                        loadUserVehicles();
+                    }, 500);
+                } else {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(errorData.detail || `Server error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error regenerating QR code:', error);
+                alert(`✗ Error regenerating QR code: ${error.message}`);
+            }
+        }
 
         // --- SECTION TOGGLE LOGIC ---
         function toggleSection(sectionId) {
