@@ -7,8 +7,8 @@ from .models import (
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
-    list_display = ['plate_number', 'brand', 'model', 'vehicle_type', 'owner', 'is_paid']
-    list_filter = ['vehicle_type', 'is_paid', 'registration_date']
+    list_display = ['plate_number', 'brand', 'model', 'vehicle_type', 'owner', 'is_paid', 'pass_type']
+    list_filter = ['vehicle_type', 'is_paid', 'pass_type', 'registration_date']
     search_fields = ['plate_number', 'brand', 'model', 'owner__first_name']
     readonly_fields = ['registration_date']
 

@@ -93,8 +93,8 @@ for rate_data in rates_data:
 # Create sample vehicles
 driver1 = User.objects.get(username='driver1')
 vehicles_data = [
-    {'vehicle_type': 'car', 'brand': 'Toyota', 'model': 'Vios', 'plate_number': 'ABC1234', 'color': 'Silver'},
-    {'vehicle_type': 'car', 'brand': 'Honda', 'model': 'Civic', 'plate_number': 'BCD5678', 'color': 'Black'},
+    {'vehicle_type': 'car', 'brand': 'Toyota', 'model': 'Vios', 'plate_number': 'ABC1234', 'color': 'Silver', 'pass_type': 'park'},
+    {'vehicle_type': 'car', 'brand': 'Honda', 'model': 'Civic', 'plate_number': 'BCD5678', 'color': 'Black', 'pass_type': 'drop_off'},
 ]
 
 print("\nCreating sample vehicles...")

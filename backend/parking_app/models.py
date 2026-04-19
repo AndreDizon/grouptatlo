@@ -28,6 +28,11 @@ PASS_TYPES = [
 
 class Vehicle(models.Model):
     """Vehicle registration model"""
+    PASS_TYPE_CHOICES = [
+        ('park', 'Parking'),
+        ('drop_off', 'Drop-off'),
+    ]
+    
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vehicles')
     vehicle_type = models.CharField(max_length=100)
     brand = models.CharField(max_length=100)
@@ -36,6 +41,7 @@ class Vehicle(models.Model):
     color = models.CharField(max_length=50, blank=True)
     registration_date = models.DateTimeField(auto_now_add=True)
     is_paid = models.BooleanField(default=False)  # Payment status for vehicle registration
+    pass_type = models.CharField(max_length=10, choices=PASS_TYPE_CHOICES, default='park')  # Parking or drop-off
     qr_code = models.ImageField(upload_to='qr_codes/', null=True, blank=True)
     sticker_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
