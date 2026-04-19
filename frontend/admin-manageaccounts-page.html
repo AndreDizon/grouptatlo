@@ -56,6 +56,17 @@
         [id^="view-"] table {
             table-layout: fixed;
             width: 100%;
+            border-collapse: collapse;
+        }
+        
+        [id^="view-"] thead {
+            display: table-header-group;
+            width: 100%;
+        }
+        
+        [id^="view-"] thead tr {
+            display: table-row;
+            width: 100%;
         }
         
         [id^="view-"] thead th {
@@ -74,6 +85,19 @@
         .reveal { opacity: 0; transition: opacity 0.7s ease, transform 0.7s ease; }
         .reveal.up { transform: translateY(40px); }
         .reveal.is-visible { opacity: 1; transform: none !important; }
+
+        /* --- TABLE HEADER STYLING --- */
+        thead {
+            display: table-header-group !important;
+            width: 100% !important;
+        }
+        thead tr {
+            display: table-row !important;
+            width: 100% !important;
+        }
+        table thead {
+            background-color: inherit !important;
+        }
 
         /* --- NIGHT MODE OVERRIDES FOR USER CONTENT --- */
         body.night-mode .bg-white { background-color: #1a2235 !important; border-color: #2a3752 !important; color: #e2e8f0; }
