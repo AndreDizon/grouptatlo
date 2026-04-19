@@ -237,7 +237,7 @@
 
         // Search vehicle by plate number
         async function searchVehicle() {
-            const plate = document.getElementById('plate-input').value;
+            const plate = document.getElementById('plate-input').value.toUpperCase();
             if (!plate) {
                 alert('Please enter a plate number');
                 return;

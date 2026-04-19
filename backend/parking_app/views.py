@@ -158,13 +158,18 @@ class VehicleViewSet(viewsets.ModelViewSet):
     serializer_class = VehicleSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['owner', 'is_paid']
+    filterset_fields = ['owner', 'is_paid', 'plate_number']
     search_fields = ['plate_number', 'brand', 'model', 'vehicle_type', 'color']
     ordering_fields = ['registration_date']
     ordering = ['-registration_date']
 
     def get_queryset(self):
         queryset = Vehicle.objects.all()
+        
+        # Handle case-insensitive plate_number filtering
+        plate_number = self.request.query_params.get('plate_number')
+        if plate_number:
+            queryset = queryset.filter(plate_number__iexact=plate_number)
         
         # Filter by owner_id query parameter if provided (for unauthenticated frontend requests)
         owner_id = self.request.query_params.get('owner')
