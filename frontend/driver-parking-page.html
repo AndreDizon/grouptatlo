@@ -14,15 +14,13 @@
             margin: 0; 
             min-height: 100vh;
             transition: background-color 0.5s ease;
-            animation: fadeIn 0.8s ease-in;
+            animation: fadeIn 0.8s linear;
         }
         body.night-mode {
             background-color: #0d1117;
         }
-        body.fade-out { animation: fadeOut 0.3s ease-out forwards; }
 
         /* --- FADE ANIMATIONS FOR PAGE TRANSITIONS --- */
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.40; } }
         .filter-select { 
             border: 1px solid #e2e8f0; 
