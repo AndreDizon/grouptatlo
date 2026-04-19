@@ -168,7 +168,7 @@ Your Code (GitHub)
    | `SECRET_KEY` | `_ij_%u9ex&3&*7fg6t%il454ty5xz0_f^(==4buz@u=2(&=_o&` |
    | `ALLOWED_HOSTS` | `ua-parking-backend.onrender.com,localhost` |
    | `CORS_ALLOWED_ORIGINS` | `https://ua-parking-system.vercel.app,https://ua-parking-backend.onrender.com` |
-   | `DATABASE_URL` | `<paste-your-connection-string-from-Step-2>` |
+   | `DATABASE_URL` | `postgresql://parkingandre:Qp75BsWr5p521wo1o05aAueHntNVq6rd@dpg-d7id1mosfn5c73e7aar0-a/ua_parking_db` |
    | `STATIC_URL` | `/static/` |
    | `MEDIA_URL` | `/media/` |
 
