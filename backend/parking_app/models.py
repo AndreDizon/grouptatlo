@@ -35,7 +35,6 @@ class Vehicle(models.Model):
     plate_number = models.CharField(max_length=20, unique=True)
     color = models.CharField(max_length=50, blank=True)
     registration_date = models.DateTimeField(auto_now_add=True)
-    is_registered = models.BooleanField(default=True)  # Auto-register vehicles on creation
     is_paid = models.BooleanField(default=False)  # Payment status for vehicle registration
     qr_code = models.ImageField(upload_to='qr_codes/', null=True, blank=True)
     sticker_number = models.CharField(max_length=50, unique=True, null=True, blank=True)

@@ -158,8 +158,8 @@ class VehicleViewSet(viewsets.ModelViewSet):
     serializer_class = VehicleSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['owner', 'plate_number', 'vehicle_type']
-    search_fields = ['plate_number', 'brand', 'model']
+    filterset_fields = ['owner', 'is_paid']
+    search_fields = ['plate_number', 'brand', 'model', 'vehicle_type', 'color']
     ordering_fields = ['registration_date']
     ordering = ['-registration_date']
 
@@ -184,30 +184,14 @@ class VehicleViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # If owner is already in the data, use it
         if 'owner' in serializer.validated_data:
-            vehicle = serializer.save(is_registered=True)
+            vehicle = serializer.save()
         else:
             # Otherwise, set owner to the authenticated user
-            vehicle = serializer.save(owner=self.request.user, is_registered=True)
+            vehicle = serializer.save(owner=self.request.user)
         
         # Auto-generate QR code after vehicle is created
         vehicle.generate_qr_code()
         vehicle.save()
-
-    @action(detail=True, methods=['post'])
-    def mark_registered(self, request, pk=None):
-        """Mark vehicle as registered"""
-        vehicle = self.get_object()
-        vehicle.is_registered = True
-        vehicle.save()
-        return Response({'message': 'Vehicle marked as registered', 'is_registered': vehicle.is_registered})
-
-    @action(detail=True, methods=['post'])
-    def mark_unregistered(self, request, pk=None):
-        """Mark vehicle as unregistered"""
-        vehicle = self.get_object()
-        vehicle.is_registered = False
-        vehicle.save()
-        return Response({'message': 'Vehicle marked as unregistered', 'is_registered': vehicle.is_registered})
 
     @action(detail=True, methods=['post'])
     def mark_paid(self, request, pk=None):

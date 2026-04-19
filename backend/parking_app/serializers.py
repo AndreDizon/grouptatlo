@@ -40,7 +40,7 @@ class VehicleSerializer(serializers.ModelSerializer):
         model = Vehicle
         fields = [
             'id', 'owner', 'owner_name', 'vehicle_type', 'brand', 'model',
-            'plate_number', 'color', 'registration_date', 'is_registered', 'is_paid',
+            'plate_number', 'color', 'registration_date', 'is_paid',
             'qr_code', 'sticker_number'
         ]
 

@@ -292,8 +292,8 @@
                 if (!vehiclesResponse.ok) throw new Error('Failed to fetch vehicles');
                 const vehicles = await vehiclesResponse.json();
                 const vehiclesList = Array.isArray(vehicles) ? vehicles : vehicles.results || [];
-                // Count only registered vehicles
-                const totalVehicles = vehiclesList.filter(v => v.is_registered).length;
+                // Count all vehicles (is_registered status has been removed)
+                const totalVehicles = vehiclesList.length;
 
                 // Fetch active parking sessions
                 const sessionsResponse = await fetch(`${API_BASE_URL}/parking-sessions/`);

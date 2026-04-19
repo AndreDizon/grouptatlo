@@ -556,15 +556,7 @@
 
                 const vehicle = vehicles[0];
                 
-                // Check if vehicle is registered
-                if (!vehicle.is_registered) {
-                    console.warn('⚠️ Vehicle not registered:', plateNumber);
-                    alert(`Vehicle "${plateNumber}" is not registered. Cannot log entry/exit.`);
-                    submitBtn.textContent = originalText;
-                    return;
-                }
-
-                console.log('4️⃣ Vehicle registered, looking for existing sessions...');
+                console.log('4️⃣ Vehicle found, looking for existing sessions...');
                 
                 // Find the most recent parking session for this vehicle
                 const sessionsRes = await fetch(`${API_BASE_URL}/parking-sessions/?vehicle=${vehicle.id}`);

@@ -334,7 +334,6 @@
                                 <p><span class="font-bold w-32 inline-block text-gray-500">Model:</span> ${vehicle.model}</p>
                                 <p><span class="font-bold w-32 inline-block text-gray-500">Plate Number:</span> <span class="font-mono">${vehicle.plate_number}</span></p>
                                 <p><span class="font-bold w-32 inline-block text-gray-500">Color:</span> ${vehicle.color || 'Not specified'}</p>
-                                <p><span class="font-bold w-32 inline-block text-gray-500">Status:</span> <span class="px-3 py-1 rounded ${vehicle.is_registered ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">${vehicle.is_registered ? 'Registered' : 'Pending'}</span></p>
                                 <p><span class="font-bold w-32 inline-block text-gray-500">Payment:</span> <span class="px-3 py-1 rounded ${vehicle.is_paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${vehicle.is_paid ? '✓ Paid' : '✗ Unpaid'}</span></p>
                                 <p><span class="font-bold w-32 inline-block text-gray-500">Registered Date:</span> ${new Date(vehicle.registration_date).toLocaleDateString() || 'N/A'}</p>
                             </div>
@@ -449,8 +448,7 @@
                         model: model,
                         plate_number: plateNumber,
                         color: color,
-                        owner: parseInt(userId),
-                        is_registered: false
+                        owner: parseInt(userId)
                     })
                 });
 
